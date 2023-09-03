@@ -204,6 +204,34 @@ Node *primary(Token **rest, Token *tk) {
 }
 
 //
+// Code generator
+//
+
+int depth = 0;
+
+void push(char *reg) {
+    if ((depth++ & 1) == 0) {
+        printf("\tsub sp, sp, #16\n");
+        printf("\tstr %s, [sp, #8]\n", reg);
+    } else {
+        printf("\tstr %s, [sp]\n", reg);
+    }
+
+    return;
+}
+
+void pop(char *reg) {
+    if ((--depth & 1) == 0) {
+        printf("\tldr %s, [sp, #8]\n", reg);
+        printf("\tadd sp, sp, #16\n");
+    } else {
+        printf("\tldr %s, [sp]\n", reg);
+    }
+
+    return;
+}
+
+//
 // Main
 //
 
