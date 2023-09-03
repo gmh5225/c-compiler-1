@@ -21,11 +21,41 @@ struct Token {
     Token *next;
 };
 
+char *current_input;
+
 int error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
+    va_end(ap);
+    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
+}
+
+int verror_at(char *loc, char *fmt, va_list ap) {
+    int pos = loc - current_input;
+    fprintf(stderr, "%s\n", current_input);
+    fprintf(stderr, "%*s", pos, "");
+    fprintf(stderr, "^ ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    return EXIT_FAILURE;
+}
+
+int error_at(char *loc, char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    verror_at(loc, fmt, ap);
+    va_end(ap);
+    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
+}
+
+int error_tk(Token *tk, char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    verror_at(tk->loc, fmt, ap);
     va_end(ap);
     exit(EXIT_FAILURE);
     return EXIT_FAILURE;
@@ -40,7 +70,7 @@ bool equal(Token *tk, char *op) {
 
 Token skip(Token *tk, char *op) {
     if (!equal(tk, op)) {
-        error("Expected '%s'", op);
+        error_tk(tk, "Expected '%s'", op);
     }
 
     return *tk->next;
@@ -48,7 +78,7 @@ Token skip(Token *tk, char *op) {
 
 long long get_number(Token *tk) {
     if (tk->kind != TK_NUM) {
-        error("Expected a number");
+        error_tk(tk, "Expected a number");
     }
 
     return tk->val;
@@ -62,7 +92,8 @@ Token *new_token(TokenKind kind, char *start, char *end) {
     return tk;
 }
 
-Token *tokenize(char *p) {
+Token *tokenize(void) {
+    char *p = current_input;
     Token head = {0};
     Token *cur = &head;
 
@@ -88,7 +119,7 @@ Token *tokenize(char *p) {
             continue;
         }
 
-        error("Invalid token");
+        error_at(p, "Invalid token");
     }
 
     cur->next = new_token(TK_EOF, p, p);
@@ -100,7 +131,8 @@ int main(int argc, char **argv) {
         error("Invalid number of arguments");
     }
 
-    Token *tk = tokenize(argv[1]);
+    current_input = argv[1];
+    Token *tk = tokenize();
 
     printf("\t.global main\n");
     printf("main:\n");
