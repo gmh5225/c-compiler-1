@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+//
+// Tokenizer
+//
+
 typedef struct Token Token;
 
 typedef enum {
@@ -112,7 +116,7 @@ Token *tokenize(void) {
             continue;
         }
 
-        if (*p == '+' || *p == '-') {
+        if (ispunct(*p)) {
             cur->next = new_token(TK_PUNCT, p, p + 1);
             cur = cur->next;
             p += 1;
@@ -125,6 +129,10 @@ Token *tokenize(void) {
     cur->next = new_token(TK_EOF, p, p);
     return head.next;
 }
+
+//
+// Main
+//
 
 int main(int argc, char **argv) {
     if (argc != 2) {
