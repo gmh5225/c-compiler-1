@@ -2,6 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct Token Token;
+
+typedef enum {
+    TK_PUNCT,
+    TK_NUM,
+    TK_EOF,
+} TokenKind;
+
+struct Token {
+    TokenKind kind;
+    long long val;
+    char *loc;
+    size_t len;
+    Token *next;
+};
+
 int error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
