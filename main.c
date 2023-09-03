@@ -231,6 +231,31 @@ void pop(char *reg) {
     return;
 }
 
+void gen_expr(Node *node) {
+    if (node->kind == ND_NUM) {
+        printf("\tmov x0, #%lld\n", node->val);
+        return;
+    }
+
+    gen_expr(node->lhs);
+    push("x0");
+    gen_expr(node->rhs);
+    pop("x1");
+
+    switch (node->kind) {
+    case ND_ADD:
+        printf("\tadd x0, x1, x0\n");
+        break;
+    case ND_SUB:
+        printf("\tsub x0, x1, x0\n");
+        break;
+    default:
+        error("Invalid expression");
+    }
+
+    return;
+}
+
 //
 // Main
 //
