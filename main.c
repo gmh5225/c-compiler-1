@@ -137,23 +137,23 @@ int main(int argc, char **argv) {
     printf("\t.global main\n");
     printf("main:\n");
 
-    printf("\tmov x0, %lld\n", get_number(tk));
+    printf("\tmov x0, #%lld\n", get_number(tk));
     tk = tk->next;
 
     while (tk->kind != TK_EOF) {
         if (equal(tk, "+")) {
-            printf("\tadd x0, x0, %lld\n", get_number(tk->next));
+            printf("\tadd x0, x0, #%lld\n", get_number(tk->next));
             tk = tk->next->next;
             continue;
         }
 
         if (equal(tk, "-")) {
-            printf("\tsub x0, x0, %lld\n", get_number(tk->next));
+            printf("\tsub x0, x0, #%lld\n", get_number(tk->next));
             tk = tk->next->next;
             continue;
         }
 
-        error("Unexpected token");
+        error_tk(tk, "Unexpected token");
     }
 
     printf("\tret\n");
