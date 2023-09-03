@@ -100,28 +100,28 @@ int main(int argc, char **argv) {
         error("Invalid number of arguments");
     }
 
-    char *p = argv[1];
+    Token *tk = tokenize(argv[1]);
 
     printf("\t.global main\n");
     printf("main:\n");
 
-    long long n = strtoll(p, &p, 10);
-    printf("\tmov x0, %lld\n", n);
+    printf("\tmov x0, %lld\n", get_number(tk));
+    tk = tk->next;
 
-    while (*p != '\0') {
-        if (*p == '+') {
-            long long n = strtoll(p + 1, &p, 10);
-            printf("\tadd x0, x0, %lld\n", n);
+    while (tk->kind != TK_EOF) {
+        if (equal(tk, "+")) {
+            printf("\tadd x0, x0, %lld\n", get_number(tk->next));
+            tk = tk->next->next;
             continue;
         }
 
-        if (*p == '-') {
-            long long n = strtoll(p + 1, &p, 10);
-            printf("\tsub x0, x0, %lld\n", n);
+        if (equal(tk, "-")) {
+            printf("\tsub x0, x0, %lld\n", get_number(tk->next));
+            tk = tk->next->next;
             continue;
         }
 
-        error("Unexpected character: '%c'", *p);
+        error("Unexpected token");
     }
 
     printf("\tret\n");
