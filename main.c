@@ -7,9 +7,31 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    char *p = argv[1];
+
     printf("\t.global main\n");
     printf("main:\n");
-    printf("\tmov x0, %s\n", argv[1]);
+
+    long long n = strtoll(p, &p, 10);
+    printf("\tmov x0, %lld\n", n);
+
+    while (*p != '\0') {
+        if (*p == '+') {
+            long long n = strtoll(p + 1, &p, 10);
+            printf("\tadd x0, x0, %lld\n", n);
+            continue;
+        }
+
+        if (*p == '-') {
+            long long n = strtoll(p + 1, &p, 10);
+            printf("\tsub x0, x0, %lld\n", n);
+            continue;
+        }
+
+        fprintf(stderr, "Unexpected character: '%c'\n", *p);
+        return EXIT_FAILURE;
+    }
+
     printf("\tret\n");
     return EXIT_SUCCESS;
 }
