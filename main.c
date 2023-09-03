@@ -1,6 +1,8 @@
+#include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct Token Token;
 
@@ -26,6 +28,37 @@ int error(char *fmt, ...) {
     va_end(ap);
     exit(EXIT_FAILURE);
     return EXIT_FAILURE;
+}
+
+bool equal(Token *tk, char *op) {
+    bool kind = tk->kind == TK_PUNCT;
+    bool len = tk->len == strlen(op);
+    bool loc = strncmp(tk->loc, op, tk->len) == 0;
+    return kind && len && loc;
+}
+
+Token skip(Token *tk, char *op) {
+    if (!equal(tk, op)) {
+        error("Expected '%s'", op);
+    }
+
+    return *tk->next;
+}
+
+long long get_number(Token *tk) {
+    if (tk->kind != TK_NUM) {
+        error("Expected a number");
+    }
+
+    return tk->val;
+}
+
+Token *new_token(TokenKind kind, char *start, char *end) {
+    Token *tk = calloc(1, sizeof(Token));
+    tk->kind = kind;
+    tk->loc = start;
+    tk->len = end - start;
+    return tk;
 }
 
 int main(int argc, char **argv) {
