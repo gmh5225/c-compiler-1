@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -267,29 +268,17 @@ int main(int argc, char **argv) {
 
     current_input = argv[1];
     Token *tk = tokenize();
+    Node *node = expr(&tk, tk);
+
+    if (tk->kind != TK_EOF) {
+        error_tk(tk, "Extra token");
+    }
 
     printf("\t.global main\n");
     printf("main:\n");
-
-    printf("\tmov x0, #%lld\n", get_number(tk));
-    tk = tk->next;
-
-    while (tk->kind != TK_EOF) {
-        if (equal(tk, "+")) {
-            printf("\tadd x0, x0, #%lld\n", get_number(tk->next));
-            tk = tk->next->next;
-            continue;
-        }
-
-        if (equal(tk, "-")) {
-            printf("\tsub x0, x0, #%lld\n", get_number(tk->next));
-            tk = tk->next->next;
-            continue;
-        }
-
-        error_tk(tk, "Unexpected token");
-    }
-
+    gen_expr(node);
     printf("\tret\n");
+
+    assert(depth == 0);
     return EXIT_SUCCESS;
 }
