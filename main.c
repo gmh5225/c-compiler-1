@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -59,6 +60,39 @@ Token *new_token(TokenKind kind, char *start, char *end) {
     tk->loc = start;
     tk->len = end - start;
     return tk;
+}
+
+Token *tokenize(char *p) {
+    Token head = {0};
+    Token *cur = &head;
+
+    while (*p != '\0') {
+        if (isspace(*p)) {
+            p += 1;
+            continue;
+        }
+
+        if (isdigit(*p)) {
+            cur->next = new_token(TK_NUM, p, p);
+            cur = cur->next;
+            char *q = p;
+            cur->val = strtoll(p, &p, 10);
+            cur->len = p - q;
+            continue;
+        }
+
+        if (*p == '+' || *p == '-') {
+            cur->next = new_token(TK_PUNCT, p, p + 1);
+            cur = cur->next;
+            p += 1;
+            continue;
+        }
+
+        error("Invalid token");
+    }
+
+    cur->next = new_token(TK_EOF, p, p);
+    return head.next;
 }
 
 int main(int argc, char **argv) {
