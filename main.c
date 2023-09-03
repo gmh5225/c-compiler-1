@@ -131,6 +131,25 @@ Token *tokenize(void) {
 }
 
 //
+// Parser
+//
+
+typedef struct Node Node;
+
+typedef enum {
+    ND_ADD,
+    ND_SUB,
+    ND_NUM,
+} NodeKind;
+
+struct Node {
+    NodeKind kind;
+    long long val;
+    Node *lhs;
+    Node *rhs;
+};
+
+//
 // Main
 //
 
