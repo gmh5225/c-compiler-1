@@ -168,6 +168,41 @@ Node *new_num(long long val) {
     return node;
 }
 
+Node *expr(Token **rest, Token *tk);
+Node *primary(Token **rest, Token *tk);
+
+Node *expr(Token **rest, Token *tk) {
+    Node *lhs = primary(&tk, tk);
+
+    while (true) {
+        if (equal(tk, "+")) {
+            Node *rhs = primary(&tk, tk->next);
+            lhs = new_binary(ND_ADD, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, "-")) {
+            Node *rhs = primary(&tk, tk->next);
+            lhs = new_binary(ND_SUB, lhs, rhs);
+            continue;
+        }
+
+        *rest = tk;
+        return lhs;
+    }
+}
+
+Node *primary(Token **rest, Token *tk) {
+    if (tk->kind == TK_NUM) {
+        Node *node = new_num(tk->val);
+        *rest = tk->next;
+        return node;
+    }
+
+    error_tk(tk, "Expected a number");
+    return NULL;
+}
+
 //
 // Main
 //
