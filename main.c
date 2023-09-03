@@ -1,10 +1,20 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+int error(char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
-        printf("Usage: %s <source>\n", argv[0]);
-        return EXIT_FAILURE;
+        error("Invalid number of arguments");
     }
 
     char *p = argv[1];
@@ -28,8 +38,7 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        fprintf(stderr, "Unexpected character: '%c'\n", *p);
-        return EXIT_FAILURE;
+        error("Unexpected character: '%c'", *p);
     }
 
     printf("\tret\n");
