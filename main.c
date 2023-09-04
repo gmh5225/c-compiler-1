@@ -26,7 +26,7 @@ struct Token {
     Token *next;
 };
 
-char *current_input;
+static char *current_input;
 
 int error(char *fmt, ...) {
     va_list ap;
@@ -38,7 +38,7 @@ int error(char *fmt, ...) {
     return EXIT_FAILURE;
 }
 
-int verror_at(char *loc, char *fmt, va_list ap) {
+static int verror_at(char *loc, char *fmt, va_list ap) {
     int pos = loc - current_input;
     fprintf(stderr, "%s\n", current_input);
     fprintf(stderr, "%*s", pos, "");
@@ -81,15 +81,7 @@ Token *skip(Token *tk, char *op) {
     return tk->next;
 }
 
-long long get_number(Token *tk) {
-    if (tk->kind != TK_NUM) {
-        error_tk(tk, "Expected a number");
-    }
-
-    return tk->val;
-}
-
-Token *new_token(TokenKind kind, char *start, char *end) {
+static Token *new_token(TokenKind kind, char *start, char *end) {
     Token *tk = calloc(1, sizeof(Token));
     tk->kind = kind;
     tk->loc = start;
@@ -97,11 +89,11 @@ Token *new_token(TokenKind kind, char *start, char *end) {
     return tk;
 }
 
-bool starts_with(char *p, char *q) {
+static bool starts_with(char *p, char *q) {
     return strncmp(p, q, strlen(q)) == 0;
 }
 
-int read_punct(char *p) {
+static int read_punct(char *p) {
     if (starts_with(p, "==")) return 2;
     if (starts_with(p, "!=")) return 2;
     if (starts_with(p, "<=")) return 2;
@@ -117,8 +109,8 @@ int read_punct(char *p) {
     return 0;
 }
 
-Token *tokenize(void) {
-    char *p = current_input;
+Token *tokenize(char *p) {
+    current_input = p;
     Token head = {0};
     Token *cur = &head;
 
@@ -180,45 +172,45 @@ struct Node {
     Node *rhs;
 };
 
-Node *new_node(NodeKind kind) {
+static Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
     return node;
 }
 
-Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
+static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = new_node(kind);
     node->lhs = lhs;
     node->rhs = rhs;
     return node;
 }
 
-Node *new_unary(NodeKind kind, Node *lhs) {
+static Node *new_unary(NodeKind kind, Node *lhs) {
     Node *node = new_node(kind);
     node->lhs = lhs;
     return node;
 }
 
-Node *new_num(long long val) {
+static Node *new_num(long long val) {
     Node *node = new_node(ND_NUM);
     node->val = val;
     return node;
 }
 
-Node *expr(Token **rest, Token *tk);
-Node *equality(Token **rest, Token *tk);
-Node *relational(Token **rest, Token *tk);
-Node *add(Token **rest, Token *tk);
-Node *mul(Token **rest, Token *tk);
-Node *unary(Token **rest, Token *tk);
-Node *primary(Token **rest, Token *tk);
+static Node *expr(Token **rest, Token *tk);
+static Node *equality(Token **rest, Token *tk);
+static Node *relational(Token **rest, Token *tk);
+static Node *add(Token **rest, Token *tk);
+static Node *mul(Token **rest, Token *tk);
+static Node *unary(Token **rest, Token *tk);
+static Node *primary(Token **rest, Token *tk);
 
-Node *expr(Token **rest, Token *tk) {
+static Node *expr(Token **rest, Token *tk) {
     return equality(rest, tk);
 }
 
 // equality = relational ("==" relational | "!=" relational)*
-Node *equality(Token **rest, Token *tk) {
+static Node *equality(Token **rest, Token *tk) {
     Node *lhs = relational(&tk, tk);
 
     while (true) {
@@ -240,7 +232,7 @@ Node *equality(Token **rest, Token *tk) {
 }
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-Node *relational(Token **rest, Token *tk) {
+static Node *relational(Token **rest, Token *tk) {
     Node *lhs = add(&tk, tk);
 
     while (true) {
@@ -274,7 +266,7 @@ Node *relational(Token **rest, Token *tk) {
 }
 
 // add = mul ("+" mul | "-" mul)*
-Node *add(Token **rest, Token *tk) {
+static Node *add(Token **rest, Token *tk) {
     Node *lhs = mul(&tk, tk);
 
     while (true) {
@@ -296,7 +288,7 @@ Node *add(Token **rest, Token *tk) {
 }
 
 // mul = unary ("*" unary | "/" unary)*
-Node *mul(Token **rest, Token *tk) {
+static Node *mul(Token **rest, Token *tk) {
     Node *lhs = unary(&tk, tk);
 
     while (true) {
@@ -318,7 +310,7 @@ Node *mul(Token **rest, Token *tk) {
 }
 
 // unary = ("+" | "-")? primary
-Node *unary(Token **rest, Token *tk) {
+static Node *unary(Token **rest, Token *tk) {
     if (equal(tk, "+")) {
         return unary(rest, tk->next);
     }
@@ -332,7 +324,7 @@ Node *unary(Token **rest, Token *tk) {
 }
 
 // primary = "(" expr ")" | num
-Node *primary(Token **rest, Token *tk) {
+static Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
         *rest = skip(tk, ")");
@@ -349,13 +341,23 @@ Node *primary(Token **rest, Token *tk) {
     return NULL;
 }
 
+Node *parse(Token *tk) {
+    Node *node = expr(&tk, tk);
+
+    if (tk->kind != TK_EOF) {
+        error_tk(tk, "Extra token");
+    }
+
+    return node;
+}
+
 //
 // Code generator
 //
 
-int depth = 0;
+static int depth = 0;
 
-void push(char *reg) {
+static void push(char *reg) {
     if ((depth++ & 1) == 0) {
         printf("\tsub sp, sp, #16\n");
         printf("\tstr %s, [sp, #8]\n", reg);
@@ -366,7 +368,7 @@ void push(char *reg) {
     return;
 }
 
-void pop(char *reg) {
+static void pop(char *reg) {
     if ((--depth & 1) == 0) {
         printf("\tldr %s, [sp, #8]\n", reg);
         printf("\tadd sp, sp, #16\n");
@@ -377,7 +379,7 @@ void pop(char *reg) {
     return;
 }
 
-void gen_expr(Node *node) {
+static void gen_expr(Node *node) {
     if (node == NULL) {
         error("Invalid expression");
     }
@@ -443,6 +445,15 @@ void gen_expr(Node *node) {
     return;
 }
 
+void codegen(Node *node) {
+    printf("\t.global main\n");
+    printf("main:\n");
+    gen_expr(node);
+    printf("\tret\n");
+    assert(depth == 0);
+    return;
+}
+
 //
 // Main
 //
@@ -452,19 +463,8 @@ int main(int argc, char **argv) {
         error("Invalid number of arguments");
     }
 
-    current_input = argv[1];
-    Token *tk = tokenize();
-    Node *node = expr(&tk, tk);
-
-    if (tk->kind != TK_EOF) {
-        error_tk(tk, "Extra token");
-    }
-
-    printf("\t.global main\n");
-    printf("main:\n");
-    gen_expr(node);
-    printf("\tret\n");
-
-    assert(depth == 0);
+    Token *tk = tokenize(argv[1]);
+    Node *node = parse(tk);
+    codegen(node);
     return EXIT_SUCCESS;
 }
