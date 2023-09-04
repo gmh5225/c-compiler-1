@@ -102,18 +102,18 @@ bool starts_with(char *p, char *q) {
 }
 
 int read_punct(char *p) {
+    if (starts_with(p, "==")) return 2;
+    if (starts_with(p, "!=")) return 2;
+    if (starts_with(p, "<=")) return 2;
+    if (starts_with(p, ">=")) return 2;
     if (starts_with(p, "+")) return 1;
     if (starts_with(p, "-")) return 1;
     if (starts_with(p, "*")) return 1;
     if (starts_with(p, "/")) return 1;
     if (starts_with(p, "(")) return 1;
     if (starts_with(p, ")")) return 1;
-    if (starts_with(p, "==")) return 2;
-    if (starts_with(p, "!=")) return 2;
     if (starts_with(p, "<")) return 1;
-    if (starts_with(p, "<=")) return 2;
     if (starts_with(p, ">")) return 1;
-    if (starts_with(p, ">=")) return 2;
     return 0;
 }
 
