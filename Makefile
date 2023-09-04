@@ -18,16 +18,16 @@ clean:
 	-rm -f tmp tmp.s
 
 main: main.o tokenize.o parse.o codegen.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) -o $@ $^
 
-main.o: main.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+main.o: main.c main.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-tokenize.o: tokenize.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+tokenize.o: tokenize.c main.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-parse.o: parse.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+parse.o: parse.c main.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-codegen.o: codegen.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+codegen.o: codegen.c main.h
+	$(CC) $(CFLAGS) -c -o $@ $<
