@@ -175,6 +175,7 @@ Node *expr(Token **rest, Token *tk);
 Node *term(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
 
+// expr = term ("+" term | "-" term)*
 Node *expr(Token **rest, Token *tk) {
     Node *lhs = term(&tk, tk);
 
@@ -196,6 +197,7 @@ Node *expr(Token **rest, Token *tk) {
     }
 }
 
+// term = primary ("*" primary | "/" primary)*
 Node *term(Token **rest, Token *tk) {
     Node *lhs = primary(&tk, tk);
 
@@ -217,6 +219,7 @@ Node *term(Token **rest, Token *tk) {
     }
 }
 
+// primary = "(" expr ")" | num
 Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
