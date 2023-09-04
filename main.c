@@ -110,6 +110,10 @@ int read_punct(char *p) {
     if (starts_with(p, ")")) return 1;
     if (starts_with(p, "==")) return 2;
     if (starts_with(p, "!=")) return 2;
+    if (starts_with(p, "<")) return 1;
+    if (starts_with(p, "<=")) return 2;
+    if (starts_with(p, ">")) return 1;
+    if (starts_with(p, ">=")) return 2;
     return 0;
 }
 
@@ -162,6 +166,10 @@ typedef enum {
     ND_NEG,
     ND_EQ,
     ND_NE,
+    ND_LT,
+    ND_LE,
+    ND_GT,
+    ND_GE,
     ND_NUM,
 } NodeKind;
 
@@ -198,25 +206,60 @@ Node *new_num(long long val) {
 }
 
 Node *equality(Token **rest, Token *tk);
+Node *relational(Token **rest, Token *tk);
 Node *expr(Token **rest, Token *tk);
 Node *term(Token **rest, Token *tk);
 Node *unary(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
 
-// equality = expr ("==" expr | "!=" expr)*
+// equality = relational ("==" relational | "!=" relational)*
 Node *equality(Token **rest, Token *tk) {
-    Node *lhs = expr(&tk, tk);
+    Node *lhs = relational(&tk, tk);
 
     while (true) {
         if (equal(tk, "==")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = relational(&tk, tk->next);
             lhs = new_binary(ND_EQ, lhs, rhs);
             continue;
         }
 
         if (equal(tk, "!=")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = relational(&tk, tk->next);
             lhs = new_binary(ND_NE, lhs, rhs);
+            continue;
+        }
+
+        *rest = tk;
+        return lhs;
+    }
+}
+
+// relational = expr ("<" expr | "<=" expr | ">" expr | ">=" expr)*
+Node *relational(Token **rest, Token *tk) {
+    Node *lhs = expr(&tk, tk);
+
+    while (true) {
+        if (equal(tk, "<")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_LT, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, "<=")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_LE, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, ">")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_GT, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, ">=")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_GE, lhs, rhs);
             continue;
         }
 
@@ -371,6 +414,22 @@ void gen_expr(Node *node) {
     case ND_NE:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, ne\n");
+        break;
+    case ND_LT:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, lt\n");
+        break;
+    case ND_LE:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, le\n");
+        break;
+    case ND_GT:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, gt\n");
+        break;
+    case ND_GE:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, ge\n");
         break;
     default:
         error("Invalid expression");
