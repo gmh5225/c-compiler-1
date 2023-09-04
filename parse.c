@@ -28,6 +28,8 @@ static Node *new_num(long long val) {
     return node;
 }
 
+static Node *stmt(Token **rest, Token *tk);
+static Node *expr_stmt(Token **rest, Token *tk);
 static Node *expr(Token **rest, Token *tk);
 static Node *equality(Token **rest, Token *tk);
 static Node *relational(Token **rest, Token *tk);
@@ -36,6 +38,19 @@ static Node *mul(Token **rest, Token *tk);
 static Node *unary(Token **rest, Token *tk);
 static Node *primary(Token **rest, Token *tk);
 
+// stmt = expr-stmt
+static Node *stmt(Token **rest, Token *tk) {
+    return expr_stmt(rest, tk);
+}
+
+// expr-stmt = expr ";"
+static Node *expr_stmt(Token **rest, Token *tk) {
+    Node *node = expr(&tk, tk);
+    *rest = skip(tk, ";");
+    return new_unary(ND_EXPR_STMT, node);
+}
+
+// expr = equality
 static Node *expr(Token **rest, Token *tk) {
     return equality(rest, tk);
 }
@@ -173,11 +188,5 @@ static Node *primary(Token **rest, Token *tk) {
 }
 
 Node *parse(Token *tk) {
-    Node *node = expr(&tk, tk);
-
-    if (tk->kind != TK_EOF) {
-        error_tk(tk, "Extra token");
-    }
-
-    return node;
+    return stmt(&tk, tk);
 }

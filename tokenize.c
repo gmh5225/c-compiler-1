@@ -86,6 +86,7 @@ static int read_punct(char *p) {
     if (starts_with(p, ")")) return 1;
     if (starts_with(p, "<")) return 1;
     if (starts_with(p, ">")) return 1;
+    if (starts_with(p, ";")) return 1;
     return 0;
 }
 

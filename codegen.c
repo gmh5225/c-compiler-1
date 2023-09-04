@@ -94,10 +94,23 @@ static void gen_expr(Node *node) {
     return;
 }
 
+static void gen_stmt(Node *node) {
+    if (node == NULL) {
+        error("Invalid statement");
+    }
+
+    if (node->kind == ND_EXPR_STMT) {
+        gen_expr(node->lhs);
+        return;
+    }
+
+    error("Invalid statement");
+}
+
 void codegen(Node *node) {
     printf("\t.global main\n");
     printf("main:\n");
-    gen_expr(node);
+    gen_stmt(node);
     printf("\tret\n");
     assert(depth == 0);
     return;
