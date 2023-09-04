@@ -14,11 +14,20 @@ test: test.sh main
 
 .PHONY: clean
 clean:
-	-rm -f main main.o
+	-rm -f main main.o tokenize.o parse.o codegen.o
 	-rm -f tmp tmp.s
 
-main: main.o
+main: main.o tokenize.o parse.o codegen.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 main.o: main.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+tokenize.o: tokenize.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+parse.o: parse.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+codegen.o: codegen.c
 	$(CC) $(CFLAGS) -c -o $@ $^

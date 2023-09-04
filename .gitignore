@@ -1,5 +1,9 @@
 *
 !.gitignore
 !Makefile
+!main.h
 !main.c
+!tokenize.c
+!parse.c
+!codegen.c
 !test.sh
