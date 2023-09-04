@@ -55,6 +55,7 @@ struct Node {
     long long val;
     Node *lhs;
     Node *rhs;
+    Node *next;
 };
 
 Node *parse(Token *tk);

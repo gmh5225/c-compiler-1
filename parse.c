@@ -187,6 +187,15 @@ static Node *primary(Token **rest, Token *tk) {
     return NULL;
 }
 
+// program = stmt*
 Node *parse(Token *tk) {
-    return stmt(&tk, tk);
+    Node head = {0};
+    Node *cur = &head;
+
+    while (tk->kind != TK_EOF) {
+        cur->next = stmt(&tk, tk);
+        cur = cur->next;
+    }
+
+    return head.next;
 }

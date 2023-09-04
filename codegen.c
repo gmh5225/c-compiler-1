@@ -110,8 +110,14 @@ static void gen_stmt(Node *node) {
 void codegen(Node *node) {
     printf("\t.global main\n");
     printf("main:\n");
-    gen_stmt(node);
+
+    Node *n = node;
+    while (n != NULL) {
+        gen_stmt(n);
+        assert(depth == 0);
+        n = n->next;
+    }
+
     printf("\tret\n");
-    assert(depth == 0);
     return;
 }
