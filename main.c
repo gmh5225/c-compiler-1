@@ -140,6 +140,8 @@ typedef struct Node Node;
 typedef enum {
     ND_ADD,
     ND_SUB,
+    ND_MUL,
+    ND_DIV,
     ND_NUM,
 } NodeKind;
 
@@ -170,21 +172,43 @@ Node *new_num(long long val) {
 }
 
 Node *expr(Token **rest, Token *tk);
+Node *term(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
 
 Node *expr(Token **rest, Token *tk) {
-    Node *lhs = primary(&tk, tk);
+    Node *lhs = term(&tk, tk);
 
     while (true) {
         if (equal(tk, "+")) {
-            Node *rhs = primary(&tk, tk->next);
+            Node *rhs = term(&tk, tk->next);
             lhs = new_binary(ND_ADD, lhs, rhs);
             continue;
         }
 
         if (equal(tk, "-")) {
-            Node *rhs = primary(&tk, tk->next);
+            Node *rhs = term(&tk, tk->next);
             lhs = new_binary(ND_SUB, lhs, rhs);
+            continue;
+        }
+
+        *rest = tk;
+        return lhs;
+    }
+}
+
+Node *term(Token **rest, Token *tk) {
+    Node *lhs = primary(&tk, tk);
+
+    while (true) {
+        if (equal(tk, "*")) {
+            Node *rhs = primary(&tk, tk->next);
+            lhs = new_binary(ND_MUL, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, "/")) {
+            Node *rhs = primary(&tk, tk->next);
+            lhs = new_binary(ND_DIV, lhs, rhs);
             continue;
         }
 
@@ -249,6 +273,12 @@ void gen_expr(Node *node) {
         break;
     case ND_SUB:
         printf("\tsub x0, x1, x0\n");
+        break;
+    case ND_MUL:
+        printf("\tmul x0, x1, x0\n");
+        break;
+    case ND_DIV:
+        printf("\tsdiv x0, x1, x0\n");
         break;
     default:
         error("Invalid expression");
