@@ -73,12 +73,12 @@ bool equal(Token *tk, char *op) {
     return kind && len && loc;
 }
 
-Token skip(Token *tk, char *op) {
+Token *skip(Token *tk, char *op) {
     if (!equal(tk, op)) {
         error_tk(tk, "Expected '%s'", op);
     }
 
-    return *tk->next;
+    return tk->next;
 }
 
 long long get_number(Token *tk) {
@@ -218,6 +218,12 @@ Node *term(Token **rest, Token *tk) {
 }
 
 Node *primary(Token **rest, Token *tk) {
+    if (equal(tk, "(")) {
+        Node *node = expr(&tk, tk->next);
+        *rest = skip(tk, ")");
+        return node;
+    }
+
     if (tk->kind == TK_NUM) {
         Node *node = new_num(tk->val);
         *rest = tk->next;
