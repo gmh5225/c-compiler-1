@@ -108,6 +108,8 @@ int read_punct(char *p) {
     if (starts_with(p, "/")) return 1;
     if (starts_with(p, "(")) return 1;
     if (starts_with(p, ")")) return 1;
+    if (starts_with(p, "==")) return 2;
+    if (starts_with(p, "!=")) return 2;
     return 0;
 }
 
@@ -158,6 +160,8 @@ typedef enum {
     ND_MUL,
     ND_DIV,
     ND_NEG,
+    ND_EQ,
+    ND_NE,
     ND_NUM,
 } NodeKind;
 
@@ -193,10 +197,33 @@ Node *new_num(long long val) {
     return node;
 }
 
+Node *equality(Token **rest, Token *tk);
 Node *expr(Token **rest, Token *tk);
 Node *term(Token **rest, Token *tk);
 Node *unary(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
+
+// equality = expr ("==" expr | "!=" expr)*
+Node *equality(Token **rest, Token *tk) {
+    Node *lhs = expr(&tk, tk);
+
+    while (true) {
+        if (equal(tk, "==")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_EQ, lhs, rhs);
+            continue;
+        }
+
+        if (equal(tk, "!=")) {
+            Node *rhs = expr(&tk, tk->next);
+            lhs = new_binary(ND_NE, lhs, rhs);
+            continue;
+        }
+
+        *rest = tk;
+        return lhs;
+    }
+}
 
 // expr = term ("+" term | "-" term)*
 Node *expr(Token **rest, Token *tk) {
@@ -337,6 +364,14 @@ void gen_expr(Node *node) {
     case ND_DIV:
         printf("\tsdiv x0, x1, x0\n");
         break;
+    case ND_EQ:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, eq\n");
+        break;
+    case ND_NE:
+        printf("\tcmp x1, x0\n");
+        printf("\tcset x0, ne\n");
+        break;
     default:
         error("Invalid expression");
     }
@@ -355,7 +390,7 @@ int main(int argc, char **argv) {
 
     current_input = argv[1];
     Token *tk = tokenize();
-    Node *node = expr(&tk, tk);
+    Node *node = equality(&tk, tk);
 
     if (tk->kind != TK_EOF) {
         error_tk(tk, "Extra token");
