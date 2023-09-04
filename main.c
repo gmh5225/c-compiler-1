@@ -205,12 +205,17 @@ Node *new_num(long long val) {
     return node;
 }
 
+Node *expr(Token **rest, Token *tk);
 Node *equality(Token **rest, Token *tk);
 Node *relational(Token **rest, Token *tk);
-Node *expr(Token **rest, Token *tk);
-Node *term(Token **rest, Token *tk);
+Node *add(Token **rest, Token *tk);
+Node *mul(Token **rest, Token *tk);
 Node *unary(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
+
+Node *expr(Token **rest, Token *tk) {
+    return equality(rest, tk);
+}
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality(Token **rest, Token *tk) {
@@ -234,31 +239,31 @@ Node *equality(Token **rest, Token *tk) {
     }
 }
 
-// relational = expr ("<" expr | "<=" expr | ">" expr | ">=" expr)*
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *relational(Token **rest, Token *tk) {
-    Node *lhs = expr(&tk, tk);
+    Node *lhs = add(&tk, tk);
 
     while (true) {
         if (equal(tk, "<")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = add(&tk, tk->next);
             lhs = new_binary(ND_LT, lhs, rhs);
             continue;
         }
 
         if (equal(tk, "<=")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = add(&tk, tk->next);
             lhs = new_binary(ND_LE, lhs, rhs);
             continue;
         }
 
         if (equal(tk, ">")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = add(&tk, tk->next);
             lhs = new_binary(ND_GT, lhs, rhs);
             continue;
         }
 
         if (equal(tk, ">=")) {
-            Node *rhs = expr(&tk, tk->next);
+            Node *rhs = add(&tk, tk->next);
             lhs = new_binary(ND_GE, lhs, rhs);
             continue;
         }
@@ -268,19 +273,19 @@ Node *relational(Token **rest, Token *tk) {
     }
 }
 
-// expr = term ("+" term | "-" term)*
-Node *expr(Token **rest, Token *tk) {
-    Node *lhs = term(&tk, tk);
+// add = mul ("+" mul | "-" mul)*
+Node *add(Token **rest, Token *tk) {
+    Node *lhs = mul(&tk, tk);
 
     while (true) {
         if (equal(tk, "+")) {
-            Node *rhs = term(&tk, tk->next);
+            Node *rhs = mul(&tk, tk->next);
             lhs = new_binary(ND_ADD, lhs, rhs);
             continue;
         }
 
         if (equal(tk, "-")) {
-            Node *rhs = term(&tk, tk->next);
+            Node *rhs = mul(&tk, tk->next);
             lhs = new_binary(ND_SUB, lhs, rhs);
             continue;
         }
@@ -290,8 +295,8 @@ Node *expr(Token **rest, Token *tk) {
     }
 }
 
-// term = unary ("*" unary | "/" unary)*
-Node *term(Token **rest, Token *tk) {
+// mul = unary ("*" unary | "/" unary)*
+Node *mul(Token **rest, Token *tk) {
     Node *lhs = unary(&tk, tk);
 
     while (true) {
@@ -449,7 +454,7 @@ int main(int argc, char **argv) {
 
     current_input = argv[1];
     Token *tk = tokenize();
-    Node *node = equality(&tk, tk);
+    Node *node = expr(&tk, tk);
 
     if (tk->kind != TK_EOF) {
         error_tk(tk, "Extra token");
