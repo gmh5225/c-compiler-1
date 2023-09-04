@@ -288,6 +288,10 @@ void pop(char *reg) {
 }
 
 void gen_expr(Node *node) {
+    if (node == NULL) {
+        error("Invalid expression");
+    }
+
     switch (node->kind) {
     case ND_NEG:
         gen_expr(node->lhs);
