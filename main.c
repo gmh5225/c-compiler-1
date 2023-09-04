@@ -142,6 +142,7 @@ typedef enum {
     ND_SUB,
     ND_MUL,
     ND_DIV,
+    ND_NEG,
     ND_NUM,
 } NodeKind;
 
@@ -165,6 +166,12 @@ Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
+Node *new_unary(NodeKind kind, Node *lhs) {
+    Node *node = new_node(kind);
+    node->lhs = lhs;
+    return node;
+}
+
 Node *new_num(long long val) {
     Node *node = new_node(ND_NUM);
     node->val = val;
@@ -173,6 +180,7 @@ Node *new_num(long long val) {
 
 Node *expr(Token **rest, Token *tk);
 Node *term(Token **rest, Token *tk);
+Node *unary(Token **rest, Token *tk);
 Node *primary(Token **rest, Token *tk);
 
 // expr = term ("+" term | "-" term)*
@@ -197,19 +205,19 @@ Node *expr(Token **rest, Token *tk) {
     }
 }
 
-// term = primary ("*" primary | "/" primary)*
+// term = unary ("*" unary | "/" unary)*
 Node *term(Token **rest, Token *tk) {
-    Node *lhs = primary(&tk, tk);
+    Node *lhs = unary(&tk, tk);
 
     while (true) {
         if (equal(tk, "*")) {
-            Node *rhs = primary(&tk, tk->next);
+            Node *rhs = unary(&tk, tk->next);
             lhs = new_binary(ND_MUL, lhs, rhs);
             continue;
         }
 
         if (equal(tk, "/")) {
-            Node *rhs = primary(&tk, tk->next);
+            Node *rhs = unary(&tk, tk->next);
             lhs = new_binary(ND_DIV, lhs, rhs);
             continue;
         }
@@ -217,6 +225,20 @@ Node *term(Token **rest, Token *tk) {
         *rest = tk;
         return lhs;
     }
+}
+
+// unary = ("+" | "-")? primary
+Node *unary(Token **rest, Token *tk) {
+    if (equal(tk, "+")) {
+        return unary(rest, tk->next);
+    }
+
+    if (equal(tk, "-")) {
+        Node *node = unary(rest, tk->next);
+        return new_unary(ND_NEG, node);
+    }
+
+    return primary(rest, tk);
 }
 
 // primary = "(" expr ")" | num
@@ -266,9 +288,16 @@ void pop(char *reg) {
 }
 
 void gen_expr(Node *node) {
-    if (node->kind == ND_NUM) {
+    switch (node->kind) {
+    case ND_NEG:
+        gen_expr(node->lhs);
+        printf("\tneg x0, x0\n");
+        return;
+    case ND_NUM:
         printf("\tmov x0, #%lld\n", node->val);
         return;
+    default:
+        break;
     }
 
     gen_expr(node->lhs);
