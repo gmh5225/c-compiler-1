@@ -8,6 +8,7 @@
 typedef struct Token Token;
 
 typedef enum {
+    TK_IDENT,
     TK_PUNCT,
     TK_NUM,
     TK_EOF,
@@ -47,11 +48,13 @@ typedef enum {
     ND_GT,
     ND_GE,
     ND_EXPR_STMT,
+    ND_VAR,
     ND_NUM,
 } NodeKind;
 
 struct Node {
     NodeKind kind;
+    char name;
     long long val;
     Node *lhs;
     Node *rhs;

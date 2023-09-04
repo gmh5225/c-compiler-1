@@ -28,6 +28,12 @@ static Node *new_num(long long val) {
     return node;
 }
 
+static Node *new_var_node(char name) {
+    Node *node = new_node(ND_VAR);
+    node->name = name;
+    return node;
+}
+
 static Node *stmt(Token **rest, Token *tk);
 static Node *expr_stmt(Token **rest, Token *tk);
 static Node *expr(Token **rest, Token *tk);
@@ -174,6 +180,12 @@ static Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
         *rest = skip(tk, ")");
+        return node;
+    }
+
+    if (tk->kind == TK_IDENT) {
+        Node *node = new_var_node(*tk->loc);
+        *rest = tk->next;
         return node;
     }
 

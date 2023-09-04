@@ -28,6 +28,20 @@ static void pop(char *reg) {
     return;
 }
 
+static void gen_addr(Node *node) {
+    if (node == NULL) {
+        error("Invalid lvalue");
+    }
+
+    if (node->kind == ND_VAR) {
+        int offset = (node->name - 'a' + 1) * 8;
+        printf("\tadd x0, fp, #%d\n", offset);
+        return;
+    }
+
+    error("Not an lvalue");
+}
+
 static void gen_expr(Node *node) {
     if (node == NULL) {
         error("Invalid expression");
@@ -40,6 +54,10 @@ static void gen_expr(Node *node) {
         return;
     case ND_NUM:
         printf("\tmov x0, #%lld\n", node->val);
+        return;
+    case ND_VAR:
+        gen_addr(node);
+        printf("\tldr x0, [x0]\n");
         return;
     default:
         break;
@@ -111,6 +129,10 @@ void codegen(Node *node) {
     printf("\t.global main\n");
     printf("main:\n");
 
+    printf("\tstp x29, x30, [sp, #-16]!\n");
+    printf("\tmov x29, sp\n");
+    printf("\tsub sp, sp, #208\n");
+
     Node *n = node;
     while (n != NULL) {
         gen_stmt(n);
@@ -118,6 +140,8 @@ void codegen(Node *node) {
         n = n->next;
     }
 
+    printf("\tmov sp, x29\n");
+    printf("\tldp x29, x30, [sp], #16\n");
     printf("\tret\n");
     return;
 }

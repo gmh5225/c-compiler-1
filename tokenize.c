@@ -110,6 +110,13 @@ Token *tokenize(char *p) {
             continue;
         }
 
+        if (islower(*p)) {
+            cur->next = new_token(TK_IDENT, p, p + 1);
+            cur = cur->next;
+            p += 1;
+            continue;
+        }
+
         int punct_len = read_punct(p);
         if (punct_len > 0) {
             cur->next = new_token(TK_PUNCT, p, p + punct_len);
