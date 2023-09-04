@@ -97,6 +97,20 @@ Token *new_token(TokenKind kind, char *start, char *end) {
     return tk;
 }
 
+bool starts_with(char *p, char *q) {
+    return strncmp(p, q, strlen(q)) == 0;
+}
+
+int read_punct(char *p) {
+    if (starts_with(p, "+")) return 1;
+    if (starts_with(p, "-")) return 1;
+    if (starts_with(p, "*")) return 1;
+    if (starts_with(p, "/")) return 1;
+    if (starts_with(p, "(")) return 1;
+    if (starts_with(p, ")")) return 1;
+    return 0;
+}
+
 Token *tokenize(void) {
     char *p = current_input;
     Token head = {0};
@@ -117,10 +131,11 @@ Token *tokenize(void) {
             continue;
         }
 
-        if (ispunct(*p)) {
-            cur->next = new_token(TK_PUNCT, p, p + 1);
+        int punct_len = read_punct(p);
+        if (punct_len > 0) {
+            cur->next = new_token(TK_PUNCT, p, p + punct_len);
             cur = cur->next;
-            p += 1;
+            p += punct_len;
             continue;
         }
 
