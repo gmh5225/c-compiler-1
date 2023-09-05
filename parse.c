@@ -37,6 +37,7 @@ static Node *new_var_node(char name) {
 static Node *stmt(Token **rest, Token *tk);
 static Node *expr_stmt(Token **rest, Token *tk);
 static Node *expr(Token **rest, Token *tk);
+static Node *assign(Token **rest, Token *tk);
 static Node *equality(Token **rest, Token *tk);
 static Node *relational(Token **rest, Token *tk);
 static Node *add(Token **rest, Token *tk);
@@ -56,9 +57,22 @@ static Node *expr_stmt(Token **rest, Token *tk) {
     return new_unary(ND_EXPR_STMT, node);
 }
 
-// expr = equality
+// expr = assign
 static Node *expr(Token **rest, Token *tk) {
-    return equality(rest, tk);
+    return assign(rest, tk);
+}
+
+// assign = equality ("=" assign)?
+static Node *assign(Token **rest, Token *tk) {
+    Node *lhs = equality(&tk, tk);
+
+    if (equal(tk, "=")) {
+        Node *rhs = assign(&tk, tk->next);
+        lhs = new_binary(ND_ASSIGN, lhs, rhs);
+    }
+
+    *rest = tk;
+    return lhs;
 }
 
 // equality = relational ("==" relational | "!=" relational)*

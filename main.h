@@ -47,6 +47,7 @@ typedef enum {
     ND_LE,
     ND_GT,
     ND_GE,
+    ND_ASSIGN,
     ND_EXPR_STMT,
     ND_VAR,
     ND_NUM,

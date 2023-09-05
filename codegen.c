@@ -59,6 +59,13 @@ static void gen_expr(Node *node) {
         gen_addr(node);
         printf("\tldr x0, [x0]\n");
         return;
+    case ND_ASSIGN:
+        gen_addr(node->lhs);
+        push("x0");
+        gen_expr(node->rhs);
+        pop("x1");
+        printf("\tstr x0, [x1]\n");
+        return;
     default:
         break;
     }
