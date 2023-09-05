@@ -35,7 +35,7 @@ static void gen_addr(Node *node) {
 
     if (node->kind == ND_VAR) {
         int offset = (node->name - 'a' + 1) * 8;
-        printf("\tadd x0, fp, #%d\n", offset);
+        printf("\tsub x0, x29, #%d\n", offset);
         return;
     }
 

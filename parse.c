@@ -189,7 +189,7 @@ static Node *unary(Token **rest, Token *tk) {
     return primary(rest, tk);
 }
 
-// primary = "(" expr ")" | num
+// primary = "(" expr ")" | ident | num
 static Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
