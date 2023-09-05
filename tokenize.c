@@ -73,6 +73,14 @@ static bool starts_with(char *p, char *q) {
     return strncmp(p, q, strlen(q)) == 0;
 }
 
+static bool is_ident1(char c) {
+    return isalpha(c) || c == '_';
+}
+
+static bool is_ident2(char c) {
+    return isalnum(c) || c == '_';
+}
+
 static int read_punct(char *p) {
     if (starts_with(p, "==")) return 2;
     if (starts_with(p, "!=")) return 2;
@@ -111,10 +119,13 @@ Token *tokenize(char *p) {
             continue;
         }
 
-        if (islower(*p)) {
-            cur->next = new_token(TK_IDENT, p, p + 1);
+        if (is_ident1(*p)) {
+            char *start = p++;
+            while (is_ident2(*p)) {
+                p += 1;
+            }
+            cur->next = new_token(TK_IDENT, start, p);
             cur = cur->next;
-            p += 1;
             continue;
         }
 
