@@ -28,14 +28,17 @@ static void pop(char *reg) {
     return;
 }
 
+static int align_to(int n, int align) {
+    return (n + align - 1) / align * align;
+}
+
 static void gen_addr(Node *node) {
     if (node == NULL) {
         error("Invalid lvalue");
     }
 
     if (node->kind == ND_VAR) {
-        int offset = (node->name - 'a' + 1) * 8;
-        printf("\tsub x0, x29, #%d\n", offset);
+        printf("\tadd x0, x29, #%d\n", node->var->offset);
         return;
     }
 
@@ -132,15 +135,31 @@ static void gen_stmt(Node *node) {
     error("Invalid statement");
 }
 
-void codegen(Node *node) {
+static void assign_lvar_offsets(Function *prog) {
+    int offset = 0;
+
+    Obj *var = prog->locals;
+    while (var != NULL) {
+        offset += 8;
+        var->offset = -offset;
+        var = var->next;
+    }
+
+    prog->stack_size = align_to(offset, 16);
+    return;
+}
+
+void codegen(Function *prog) {
+    assign_lvar_offsets(prog);
+
     printf("\t.global main\n");
     printf("main:\n");
 
     printf("\tstp x29, x30, [sp, #-16]!\n");
     printf("\tmov x29, sp\n");
-    printf("\tsub sp, sp, #208\n");
+    printf("\tsub sp, sp, #%d\n", prog->stack_size);
 
-    Node *n = node;
+    Node *n = prog->body;
     while (n != NULL) {
         gen_stmt(n);
         assert(depth == 0);

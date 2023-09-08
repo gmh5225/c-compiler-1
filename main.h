@@ -82,6 +82,6 @@ Function *parse(Token *tk);
 // Code generator
 //
 
-void codegen(Node *node);
+void codegen(Function *prog);
 
 #endif
