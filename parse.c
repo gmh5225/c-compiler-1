@@ -138,6 +138,7 @@ static Node *compound_stmt(Token **rest, Token *tk) {
     while (!equal(tk, "}")) {
         cur->next = stmt(&tk, tk);
         cur = cur->next;
+        add_type(cur);
     }
 
     Node *node = new_node(ND_BLOCK, tk);
