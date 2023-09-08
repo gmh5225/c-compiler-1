@@ -55,6 +55,7 @@ bool equal(Token *tk, char *op) {
 Token *skip(Token *tk, char *op) {
     if (!equal(tk, op)) {
         error_tk(tk, "Expected '%s'", op);
+        return NULL;
     }
 
     return tk->next;
@@ -102,7 +103,6 @@ static int read_punct(char *p) {
 
 static bool is_keyword(Token *tk) {
     static char *kw[] = {"return", "if", "else", "for"};
-
     for (int i = 0, n = sizeof(kw) / sizeof(*kw); i < n; ++i) {
         if (equal(tk, kw[i])) {
             return true;
@@ -161,6 +161,7 @@ Token *tokenize(char *p) {
         }
 
         error_at(p, "Invalid token");
+        return NULL;
     }
 
     cur->next = new_token(TK_EOF, p, p);

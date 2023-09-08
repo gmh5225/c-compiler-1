@@ -86,11 +86,9 @@ static Node *stmt(Token **rest, Token *tk) {
         node->cond = expr(&tk, tk);
         tk = skip(tk, ")");
         node->then = stmt(&tk, tk);
-
         if (equal(tk, "else")) {
             node->els = stmt(&tk, tk->next);
         }
-
         *rest = tk;
         return node;
     }
@@ -289,11 +287,9 @@ static Node *primary(Token **rest, Token *tk) {
 
     if (tk->kind == TK_IDENT) {
         Obj *var = find_var(tk);
-
         if (var == NULL) {
             var = new_lvar(strndup(tk->loc, tk->len));
         }
-
         *rest = tk->next;
         return new_var_node(var);
     }
@@ -311,7 +307,6 @@ static Node *primary(Token **rest, Token *tk) {
 // program = stmt*
 Function *parse(Token *tk) {
     tk = skip(tk, "{");
-
     Function *prog = calloc(1, sizeof(Function));
     prog->body = compound_stmt(&tk, tk);
     prog->locals = locals;

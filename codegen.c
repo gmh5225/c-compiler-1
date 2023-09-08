@@ -40,6 +40,7 @@ static int align_to(int n, int align) {
 static void gen_addr(Node *node) {
     if (node == NULL) {
         error("Invalid lvalue");
+        return;
     }
 
     if (node->kind == ND_VAR) {
@@ -48,11 +49,13 @@ static void gen_addr(Node *node) {
     }
 
     error("Not an lvalue");
+    return;
 }
 
 static void gen_expr(Node *node) {
     if (node == NULL) {
         error("Invalid expression");
+        return;
     }
 
     switch (node->kind) {
@@ -86,50 +89,50 @@ static void gen_expr(Node *node) {
     switch (node->kind) {
     case ND_ADD:
         printf("\tadd x0, x1, x0\n");
-        break;
+        return;
     case ND_SUB:
         printf("\tsub x0, x1, x0\n");
-        break;
+        return;
     case ND_MUL:
         printf("\tmul x0, x1, x0\n");
-        break;
+        return;
     case ND_DIV:
         printf("\tsdiv x0, x1, x0\n");
-        break;
+        return;
     case ND_EQ:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, eq\n");
-        break;
+        return;
     case ND_NE:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, ne\n");
-        break;
+        return;
     case ND_LT:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, lt\n");
-        break;
+        return;
     case ND_LE:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, le\n");
-        break;
+        return;
     case ND_GT:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, gt\n");
-        break;
+        return;
     case ND_GE:
         printf("\tcmp x1, x0\n");
         printf("\tcset x0, ge\n");
-        break;
+        return;
     default:
         error("Invalid expression");
+        return;
     }
-
-    return;
 }
 
 static void gen_stmt(Node *node) {
     if (node == NULL) {
         error("Invalid statement");
+        return;
     }
 
     switch (node->kind) {
@@ -177,15 +180,13 @@ static void gen_stmt(Node *node) {
         gen_expr(node->lhs);
         return;
     default:
-        break;
+        error("Invalid statement");
+        return;
     }
-
-    error("Invalid statement");
 }
 
 static void assign_lvar_offsets(Function *prog) {
     int offset = 0;
-
     for (Obj *v = prog->locals; v != NULL; v = v->next) {
         v->offset = offset += 8;
     }

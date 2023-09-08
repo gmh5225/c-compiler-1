@@ -5,6 +5,7 @@
 int main(int argc, char **argv) {
     if (argc != 2) {
         error("Invalid number of arguments");
+        return EXIT_FAILURE;
     }
 
     Token *tk = tokenize(argv[1]);
