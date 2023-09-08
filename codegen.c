@@ -147,6 +147,23 @@ static void gen_stmt(Node *node) {
         printf(".L.end.%d:\n", c);
         return;
     }
+    case ND_FOR: {
+        int c = count();
+        gen_stmt(node->init);
+        printf(".L.begin.%d:\n", c);
+        if (node->cond != NULL) {
+            gen_expr(node->cond);
+            printf("\tcmp x0, #0\n");
+            printf("\tbeq .L.end.%d\n", c);
+        }
+        gen_stmt(node->then);
+        if (node->inc != NULL) {
+            gen_expr(node->inc);
+        }
+        printf("\tb .L.begin.%d\n", c);
+        printf(".L.end.%d:\n", c);
+        return;
+    }
     case ND_BLOCK:
         for (Node *n = node->body; n != NULL; n = n->next) {
             gen_stmt(n);
