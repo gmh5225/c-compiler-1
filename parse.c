@@ -1,7 +1,21 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include "main.h"
+
+Obj *locals;
+
+static Obj *find_var(Token *tk) {
+    for (Obj *var = locals; var != NULL; var = var->next) {
+        if (strlen(var->name) == tk->len && !strncmp(tk->loc, var->name, tk->len)) {
+            return var;
+        }
+    }
+
+    return NULL;
+}
 
 static Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
@@ -28,10 +42,18 @@ static Node *new_num(long long val) {
     return node;
 }
 
-static Node *new_var_node(char name) {
+static Node *new_var_node(Obj *var) {
     Node *node = new_node(ND_VAR);
-    node->name = name;
+    node->var = var;
     return node;
+}
+
+static Obj *new_lvar(char *name) {
+    Obj *var = calloc(1, sizeof(Obj));
+    var->name = name;
+    var->next = locals;
+    locals = var;
+    return var;
 }
 
 static Node *stmt(Token **rest, Token *tk);
@@ -198,9 +220,14 @@ static Node *primary(Token **rest, Token *tk) {
     }
 
     if (tk->kind == TK_IDENT) {
-        Node *node = new_var_node(*tk->loc);
+        Obj *var = find_var(tk);
+
+        if (var == NULL) {
+            var = new_lvar(strndup(tk->loc, tk->len));
+        }
+
         *rest = tk->next;
-        return node;
+        return new_var_node(var);
     }
 
     if (tk->kind == TK_NUM) {
@@ -214,7 +241,7 @@ static Node *primary(Token **rest, Token *tk) {
 }
 
 // program = stmt*
-Node *parse(Token *tk) {
+Function *parse(Token *tk) {
     Node head = {0};
     Node *cur = &head;
 
@@ -223,5 +250,8 @@ Node *parse(Token *tk) {
         cur = cur->next;
     }
 
-    return head.next;
+    Function *prog = calloc(1, sizeof(Function));
+    prog->body = head.next;
+    prog->locals = locals;
+    return prog;
 }

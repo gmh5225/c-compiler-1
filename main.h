@@ -69,14 +69,14 @@ typedef enum {
 
 struct Node {
     NodeKind kind;
-    char name;
+    Obj *var;
     long long val;
     Node *lhs;
     Node *rhs;
     Node *next;
 };
 
-Node *parse(Token *tk);
+Function *parse(Token *tk);
 
 //
 // Code generator
