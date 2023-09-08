@@ -43,7 +43,7 @@ static void gen_addr(Node *node) {
     }
 
     if (node->kind == ND_VAR) {
-        printf("\tadd x0, x29, #%d\n", node->var->offset);
+        printf("\tsub x0, x29, #%d\n", node->var->offset);
         return;
     }
 
@@ -169,11 +169,8 @@ static void gen_stmt(Node *node) {
 static void assign_lvar_offsets(Function *prog) {
     int offset = 0;
 
-    Obj *var = prog->locals;
-    while (var != NULL) {
-        offset += 8;
-        var->offset = -offset;
-        var = var->next;
+    for (Obj *v = prog->locals; v != NULL; v = v->next) {
+        v->offset = offset += 8;
     }
 
     prog->stack_size = align_to(offset, 16);

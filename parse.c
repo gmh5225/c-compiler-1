@@ -8,9 +8,9 @@
 Obj *locals;
 
 static Obj *find_var(Token *tk) {
-    for (Obj *var = locals; var != NULL; var = var->next) {
-        if (strlen(var->name) == tk->len && !strncmp(tk->loc, var->name, tk->len)) {
-            return var;
+    for (Obj *v = locals; v != NULL; v = v->next) {
+        if (strlen(v->name) == tk->len && !strncmp(tk->loc, v->name, tk->len)) {
+            return v;
         }
     }
 
