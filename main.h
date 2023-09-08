@@ -64,6 +64,7 @@ typedef enum {
     ND_GE,
     ND_ASSIGN,
     ND_RETURN,
+    ND_BLOCK,
     ND_EXPR_STMT,
     ND_VAR,
     ND_NUM,
@@ -73,6 +74,7 @@ struct Node {
     NodeKind kind;
     Obj *var;
     long long val;
+    Node *body;
     Node *lhs;
     Node *rhs;
     Node *next;

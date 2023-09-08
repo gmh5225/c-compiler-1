@@ -128,6 +128,11 @@ static void gen_stmt(Node *node) {
     }
 
     switch (node->kind) {
+    case ND_BLOCK:
+        for (Node *n = node->body; n != NULL; n = n->next) {
+            gen_stmt(n);
+        }
+        return;
     case ND_RETURN:
         gen_expr(node->lhs);
         printf("\tb .L.return\n");
@@ -166,12 +171,8 @@ void codegen(Function *prog) {
     printf("\tmov x29, sp\n");
     printf("\tsub sp, sp, #%d\n", prog->stack_size);
 
-    Node *n = prog->body;
-    while (n != NULL) {
-        gen_stmt(n);
-        assert(depth == 0);
-        n = n->next;
-    }
+    gen_stmt(prog->body);
+    assert(depth == 0);
 
     printf(".L.return:\n");
     printf("\tmov sp, x29\n");
