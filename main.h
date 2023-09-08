@@ -63,6 +63,8 @@ typedef enum {
     ND_GT,
     ND_GE,
     ND_ASSIGN,
+    ND_ADDR,
+    ND_DEREF,
     ND_RETURN,
     ND_IF,
     ND_FOR,

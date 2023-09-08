@@ -285,7 +285,8 @@ static Node *mul(Token **rest, Token *tk) {
     }
 }
 
-// unary = ("+" | "-")? primary
+// unary = ("+" | "-" | "*" | "&") unary
+//       | primary
 static Node *unary(Token **rest, Token *tk) {
     if (equal(tk, "+")) {
         return unary(rest, tk->next);
@@ -294,6 +295,16 @@ static Node *unary(Token **rest, Token *tk) {
     if (equal(tk, "-")) {
         Node *node = unary(rest, tk->next);
         return new_unary(ND_NEG, node, tk);
+    }
+
+    if (equal(tk, "*")) {
+        Node *node = unary(rest, tk->next);
+        return new_unary(ND_DEREF, node, tk);
+    }
+
+    if (equal(tk, "&")) {
+        Node *node = unary(rest, tk->next);
+        return new_unary(ND_ADDR, node, tk);
     }
 
     return primary(rest, tk);

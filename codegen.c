@@ -37,19 +37,25 @@ static int align_to(int n, int align) {
     return (n + align - 1) / align * align;
 }
 
+static void gen_expr(Node *node);
+
 static void gen_addr(Node *node) {
     if (node == NULL) {
         error("Invalid lvalue");
         return;
     }
 
-    if (node->kind == ND_VAR) {
+    switch (node->kind) {
+    case ND_VAR:
         printf("\tsub x0, x29, #%d\n", node->var->offset);
         return;
+    case ND_DEREF:
+        gen_expr(node->lhs);
+        return;
+    default:
+        error_tk(node->tk, "Not an lvalue");
+        return;
     }
-
-    error_tk(node->tk, "Not an lvalue");
-    return;
 }
 
 static void gen_expr(Node *node) {
@@ -69,6 +75,13 @@ static void gen_expr(Node *node) {
     case ND_VAR:
         gen_addr(node);
         printf("\tldr x0, [x0]\n");
+        return;
+    case ND_DEREF:
+        gen_expr(node->lhs);
+        printf("\tldr x0, [x0]\n");
+        return;
+    case ND_ADDR:
+        gen_addr(node->lhs);
         return;
     case ND_ASSIGN:
         gen_addr(node->lhs);
