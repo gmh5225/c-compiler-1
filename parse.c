@@ -69,6 +69,12 @@ static Node *primary(Token **rest, Token *tk);
 
 // stmt = expr-stmt
 static Node *stmt(Token **rest, Token *tk) {
+    if (equal(tk, "return")) {
+        Node *node = new_unary(ND_RETURN, expr(&tk, tk->next));
+        *rest = skip(tk, ";");
+        return node;
+    }
+
     return expr_stmt(rest, tk);
 }
 

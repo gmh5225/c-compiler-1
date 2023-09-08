@@ -10,6 +10,7 @@ typedef struct Token Token;
 typedef enum {
     TK_IDENT,
     TK_PUNCT,
+    TK_KEYWORD,
     TK_NUM,
     TK_EOF,
 } TokenKind;
@@ -62,6 +63,7 @@ typedef enum {
     ND_GT,
     ND_GE,
     ND_ASSIGN,
+    ND_RETURN,
     ND_EXPR_STMT,
     ND_VAR,
     ND_NUM,

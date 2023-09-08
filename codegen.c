@@ -127,9 +127,16 @@ static void gen_stmt(Node *node) {
         error("Invalid statement");
     }
 
-    if (node->kind == ND_EXPR_STMT) {
+    switch (node->kind) {
+    case ND_RETURN:
+        gen_expr(node->lhs);
+        printf("\tb .L.return\n");
+        return;
+    case ND_EXPR_STMT:
         gen_expr(node->lhs);
         return;
+    default:
+        break;
     }
 
     error("Invalid statement");
@@ -166,6 +173,7 @@ void codegen(Function *prog) {
         n = n->next;
     }
 
+    printf(".L.return:\n");
     printf("\tmov sp, x29\n");
     printf("\tldp x29, x30, [sp], #16\n");
     printf("\tret\n");

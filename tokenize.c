@@ -47,10 +47,9 @@ int error_tk(Token *tk, char *fmt, ...) {
 }
 
 bool equal(Token *tk, char *op) {
-    bool kind = tk->kind == TK_PUNCT;
     bool len = tk->len == strlen(op);
     bool loc = strncmp(tk->loc, op, tk->len) == 0;
-    return kind && len && loc;
+    return len && loc;
 }
 
 Token *skip(Token *tk, char *op) {
@@ -99,6 +98,16 @@ static int read_punct(char *p) {
     return 0;
 }
 
+static void convert_keywords(Token *tk) {
+    for (Token *t = tk; t->kind != TK_EOF; t = t->next) {
+        if (equal(t, "return")) {
+            t->kind = TK_KEYWORD;
+        }
+    }
+
+    return;
+}
+
 Token *tokenize(char *p) {
     current_input = p;
     Token head = {0};
@@ -141,5 +150,6 @@ Token *tokenize(char *p) {
     }
 
     cur->next = new_token(TK_EOF, p, p);
+    convert_keywords(head.next);
     return head.next;
 }
