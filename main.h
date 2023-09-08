@@ -95,6 +95,25 @@ struct Node {
 Function *parse(Token *tk);
 
 //
+// Types
+//
+
+typedef enum {
+    TY_INT,
+    TY_PTR,
+} TypeKind;
+
+struct Type {
+    TypeKind kind;
+    Type *base;
+};
+
+extern Type *ty_int;
+
+bool is_integer(Type *ty);
+void add_type(Node *node);
+
+//
 // Code generator
 //
 
