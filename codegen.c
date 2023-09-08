@@ -48,13 +48,13 @@ static void gen_addr(Node *node) {
         return;
     }
 
-    error("Not an lvalue");
+    error_tk(node->tk, "Not an lvalue");
     return;
 }
 
 static void gen_expr(Node *node) {
     if (node == NULL) {
-        error("Invalid expression");
+        error_tk(node->tk, "Invalid expression");
         return;
     }
 
@@ -124,14 +124,14 @@ static void gen_expr(Node *node) {
         printf("\tcset x0, ge\n");
         return;
     default:
-        error("Invalid expression");
+        error_tk(node->tk, "Invalid expression");
         return;
     }
 }
 
 static void gen_stmt(Node *node) {
     if (node == NULL) {
-        error("Invalid statement");
+        error_tk(node->tk, "Invalid statement");
         return;
     }
 
@@ -182,7 +182,7 @@ static void gen_stmt(Node *node) {
         gen_expr(node->lhs);
         return;
     default:
-        error("Invalid statement");
+        error_tk(node->tk, "Invalid statement");
         return;
     }
 }

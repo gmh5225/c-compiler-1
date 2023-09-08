@@ -74,6 +74,7 @@ typedef enum {
 
 struct Node {
     NodeKind kind;
+    Token *tk;
 
     Obj *var;
     long long val;
