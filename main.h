@@ -34,6 +34,20 @@ Token *tokenize(char *p);
 //
 
 typedef struct Node Node;
+typedef struct Obj Obj;
+typedef struct Function Function;
+
+struct Obj {
+    char *name;
+    int offset;
+    Obj *next;
+};
+
+struct Function {
+    Node *body;
+    int stack_size;
+    Obj *locals;
+};
 
 typedef enum {
     ND_ADD,
