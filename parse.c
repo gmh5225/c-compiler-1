@@ -57,6 +57,51 @@ static Obj *new_lvar(char *name) {
     return var;
 }
 
+static Node *new_add(Node *lhs, Node *rhs, Token *tk) {
+    add_type(lhs);
+    add_type(rhs);
+
+    if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+        return new_binary(ND_ADD, lhs, rhs, tk);
+    }
+
+    if (lhs->ty->base && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+        return new_binary(ND_ADD, lhs, rhs, tk);
+    }
+
+    if (is_integer(lhs->ty) && rhs->ty->base) {
+        lhs = new_binary(ND_MUL, lhs, new_num(8, tk), tk);
+        return new_binary(ND_ADD, lhs, rhs, tk);
+    }
+
+    error_tk(tk, "Invalid operands");
+    return NULL;
+}
+
+static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
+    add_type(lhs);
+    add_type(rhs);
+
+    if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+        return new_binary(ND_SUB, lhs, rhs, tk);
+    }
+
+    if (lhs->ty->base && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+        return new_binary(ND_SUB, lhs, rhs, tk);
+    }
+
+    if (lhs->ty->base && rhs->ty->base) {
+        Node *node = new_binary(ND_SUB, lhs, rhs, tk);
+        node->ty = ty_int;
+        return new_binary(ND_DIV, node, new_num(8, tk), tk);
+    }
+
+    error_tk(tk, "Invalid operands");
+    return NULL;
+}
+
 static Node *stmt(Token **rest, Token *tk);
 static Node *compound_stmt(Token **rest, Token *tk);
 static Node *expr_stmt(Token **rest, Token *tk);
@@ -138,6 +183,7 @@ static Node *compound_stmt(Token **rest, Token *tk) {
     while (!equal(tk, "}")) {
         cur->next = stmt(&tk, tk);
         cur = cur->next;
+        add_type(cur);
     }
 
     Node *node = new_node(ND_BLOCK, tk);
@@ -246,13 +292,13 @@ static Node *add(Token **rest, Token *tk) {
 
         if (equal(tk, "+")) {
             Node *rhs = mul(&tk, tk->next);
-            lhs = new_binary(ND_ADD, lhs, rhs, start);
+            lhs = new_add(lhs, rhs, start);
             continue;
         }
 
         if (equal(tk, "-")) {
             Node *rhs = mul(&tk, tk->next);
-            lhs = new_binary(ND_SUB, lhs, rhs, start);
+            lhs = new_sub(lhs, rhs, start);
             continue;
         }
 
