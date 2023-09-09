@@ -61,7 +61,6 @@ void add_type(Node *node) {
         node->ty = pointer_to(node->lhs->ty);
         return;
     default:
-        error_tk(node->tk, "Invalid expression");
         return;
     }
 }

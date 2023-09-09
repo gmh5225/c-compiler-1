@@ -94,6 +94,7 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
 
     if (lhs->ty->base && rhs->ty->base) {
         Node *node = new_binary(ND_SUB, lhs, rhs, tk);
+        node->ty = ty_int;
         return new_binary(ND_DIV, node, new_num(8, tk), tk);
     }
 
