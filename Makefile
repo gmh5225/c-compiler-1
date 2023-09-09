@@ -17,7 +17,7 @@ clean:
 	-rm -f main main.o tokenize.o parse.o codegen.o
 	-rm -f tmp tmp.s
 
-main: main.o tokenize.o parse.o codegen.o
+main: main.o tokenize.o parse.o type.o codegen.o
 	$(CC) -o $@ $^
 
 main.o: main.c main.h
@@ -27,6 +27,9 @@ tokenize.o: tokenize.c main.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 parse.o: parse.c main.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+type.o: type.c main.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 codegen.o: codegen.c main.h

@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include "main.h"
 
 Type *ty_int = &(Type){TY_INT};
@@ -58,7 +61,7 @@ void add_type(Node *node) {
         node->ty = pointer_to(node->lhs->ty);
         return;
     default:
-        error_tok(node->tok, "Invalid expression");
+        error_tk(node->tk, "Invalid expression");
         return;
     }
 }
