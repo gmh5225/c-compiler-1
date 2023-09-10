@@ -117,8 +117,12 @@ static Type *declspec(Token **rest, Token *tk) {
     return ty_int;
 }
 
-// declarator = ident
+// declarator = "*"* ident
 static Type *declarator(Token **rest, Token *tk, Type *ty) {
+    while (consume(&tk, tk, "*")) {
+        ty = pointer_to(ty);
+    }
+
     if (tk->kind != TK_IDENT) {
         error_tk(tk, "Expected a variable name");
     }
