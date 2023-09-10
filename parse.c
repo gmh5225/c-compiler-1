@@ -103,6 +103,40 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
     return NULL;
 }
 
+static char *get_ident(Token *tk) {
+    if (tk->kind != TK_IDENT) {
+        error_tk(tk, "Expected an identifier");
+    }
+
+    return strndup(tk->loc, tk->len);
+}
+
+// declspec = "int"
+static Type *declspec(Token **rest, Token *tk) {
+    *rest = skip(tk, "int");
+    return ty_int;
+}
+
+// declarator = ident
+static Type *declarator(Token **rest, Token *tk, Type *ty) {
+    if (tk->kind != TK_IDENT) {
+        error_tk(tk, "Expected a variable name");
+    }
+
+    ty->name = tk;
+    *rest = tk->next;
+    return ty;
+}
+
+// declaration = declspec declarator ";"
+static Node *declaration(Token **rest, Token *tk) {
+    Type *ty = declspec(&tk, tk);
+    ty = declarator(&tk, tk, ty);
+    *rest = skip(tk, ";");
+    new_lvar(get_ident(ty->name), ty);
+    return NULL;
+}
+
 static Node *stmt(Token **rest, Token *tk);
 static Node *compound_stmt(Token **rest, Token *tk);
 static Node *expr_stmt(Token **rest, Token *tk);
@@ -176,12 +210,17 @@ static Node *stmt(Token **rest, Token *tk) {
     return expr_stmt(rest, tk);
 }
 
-// compound-stmt = stmt* "}"
+// compound-stmt = (declaration | stmt)* "}"
 static Node *compound_stmt(Token **rest, Token *tk) {
     Node head = {0};
     Node *cur = &head;
 
     while (!equal(tk, "}")) {
+        if (equal(tk, "int")) {
+            declaration(&tk, tk);
+            continue;
+        }
+
         cur->next = stmt(&tk, tk);
         cur = cur->next;
         add_type(cur);
