@@ -14,7 +14,7 @@ test: test.sh main
 
 .PHONY: clean
 clean:
-	-rm -f main main.o tokenize.o parse.o codegen.o
+	-rm -f main main.o tokenize.o parse.o type.o codegen.o
 	-rm -f tmp tmp.s
 
 main: main.o tokenize.o parse.o type.o codegen.o
