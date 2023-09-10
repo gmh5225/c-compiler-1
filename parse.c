@@ -49,9 +49,10 @@ static Node *new_var_node(Obj *var, Token *tk) {
     return node;
 }
 
-static Obj *new_lvar(char *name) {
+static Obj *new_lvar(char *name, Type *ty) {
     Obj *var = calloc(1, sizeof(Obj));
     var->name = name;
+    var->ty = ty;
     var->next = locals;
     locals = var;
     return var;
@@ -367,7 +368,7 @@ static Node *primary(Token **rest, Token *tk) {
     if (tk->kind == TK_IDENT) {
         Obj *var = find_var(tk);
         if (var == NULL) {
-            var = new_lvar(strndup(tk->loc, tk->len));
+            error_tk(tk, "Undefined variable");
         }
         *rest = tk->next;
         return new_var_node(var, tk);
