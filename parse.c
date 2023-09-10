@@ -103,6 +103,18 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
     return NULL;
 }
 
+static Node *stmt(Token **rest, Token *tk);
+static Node *compound_stmt(Token **rest, Token *tk);
+static Node *expr_stmt(Token **rest, Token *tk);
+static Node *expr(Token **rest, Token *tk);
+static Node *assign(Token **rest, Token *tk);
+static Node *equality(Token **rest, Token *tk);
+static Node *relational(Token **rest, Token *tk);
+static Node *add(Token **rest, Token *tk);
+static Node *mul(Token **rest, Token *tk);
+static Node *unary(Token **rest, Token *tk);
+static Node *primary(Token **rest, Token *tk);
+
 static char *get_ident(Token *tk) {
     if (tk->kind != TK_IDENT) {
         error_tk(tk, "Expected an identifier");
@@ -132,26 +144,23 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
     return ty;
 }
 
-// declaration = declspec declarator ";"
+// declaration = declspec declarator ("=" expr)? ";"
 static Node *declaration(Token **rest, Token *tk) {
     Type *ty = declspec(&tk, tk);
     ty = declarator(&tk, tk, ty);
+    Obj *var = new_lvar(get_ident(ty->name), ty);
+
+    if (equal(tk, "=")) {
+        Node *node = new_node(ND_ASSIGN, tk);
+        node->lhs = new_var_node(var, tk);
+        node->rhs = expr(&tk, tk->next);
+        *rest = skip(tk, ";");
+        return new_unary(ND_EXPR_STMT, node, tk);
+    }
+
     *rest = skip(tk, ";");
-    new_lvar(get_ident(ty->name), ty);
     return NULL;
 }
-
-static Node *stmt(Token **rest, Token *tk);
-static Node *compound_stmt(Token **rest, Token *tk);
-static Node *expr_stmt(Token **rest, Token *tk);
-static Node *expr(Token **rest, Token *tk);
-static Node *assign(Token **rest, Token *tk);
-static Node *equality(Token **rest, Token *tk);
-static Node *relational(Token **rest, Token *tk);
-static Node *add(Token **rest, Token *tk);
-static Node *mul(Token **rest, Token *tk);
-static Node *unary(Token **rest, Token *tk);
-static Node *primary(Token **rest, Token *tk);
 
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
@@ -221,7 +230,11 @@ static Node *compound_stmt(Token **rest, Token *tk) {
 
     while (!equal(tk, "}")) {
         if (equal(tk, "int")) {
-            declaration(&tk, tk);
+            Node *node = declaration(&tk, tk);
+            if (node != NULL) {
+                cur->next = node;
+                cur = cur->next;
+            }
             continue;
         }
 
