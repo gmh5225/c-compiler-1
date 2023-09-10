@@ -28,6 +28,7 @@ int error_at(char *loc, char *fmt, ...);
 int error_tk(Token *tk, char *fmt, ...);
 bool equal(Token *tk, char *op);
 Token *skip(Token *tk, char *op);
+bool consume(Token **rest, Token *tk, char *str);
 Token *tokenize(char *p);
 
 //
@@ -41,6 +42,7 @@ typedef struct Type Type;
 
 struct Obj {
     char *name;
+    Type *ty;
     int offset;
     Obj *next;
 };
@@ -108,11 +110,13 @@ typedef enum {
 struct Type {
     TypeKind kind;
     Type *base;
+    Token *name;
 };
 
 extern Type *ty_int;
 
 bool is_integer(Type *ty);
+Type *pointer_to(Type *base);
 void add_type(Node *node);
 
 //
