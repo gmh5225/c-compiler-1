@@ -90,6 +90,10 @@ static void gen_expr(Node *node) {
         pop("x1");
         printf("\tstr x0, [x1]\n");
         return;
+    case ND_FUNC_CALL:
+        printf("\tmov x0, #0\n");
+        printf("\tbl %s\n", node->funcname);
+        return;
     default:
         break;
     }
