@@ -428,7 +428,10 @@ static Node *unary(Token **rest, Token *tk) {
     return primary(rest, tk);
 }
 
-// primary = "(" expr ")" | ident | num
+// primary = "(" expr ")"
+//         | ident args?
+//         | num
+// args = "(" ")"
 static Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
@@ -437,6 +440,13 @@ static Node *primary(Token **rest, Token *tk) {
     }
 
     if (tk->kind == TK_IDENT) {
+        if (equal(tk->next, "(")) {
+            Node *node = new_node(ND_FUNC_CALL, tk);
+            node->funcname = strndup(tk->loc, tk->len);
+            *rest = skip(tk->next->next, ")");
+            return node;
+        }
+
         Obj *var = find_var(tk);
         if (var == NULL) {
             error_tk(tk, "Undefined variable");
