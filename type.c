@@ -55,6 +55,7 @@ void add_type(Node *node) {
     case ND_DEREF:
         if (node->lhs->ty->kind != TY_PTR) {
             error_tk(node->tk, "Invalid pointer dereference");
+            return;
         }
         node->ty = node->lhs->ty->base;
         return;
