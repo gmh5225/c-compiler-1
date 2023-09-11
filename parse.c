@@ -144,21 +144,31 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
     return ty;
 }
 
-// declaration = declspec declarator ("=" expr)? ";"
+// declaration = declspec (declarator ("=" expr)? ("," declarator ("=" expr)?)*)? ";"
 static Node *declaration(Token **rest, Token *tk) {
     Type *basety = declspec(&tk, tk);
 
     Node head = {0};
     Node *cur = &head;
+    int i = 0;
 
-    Type *ty = declarator(&tk, tk, basety);
-    Obj *var = new_lvar(get_ident(ty->name), ty);
+    while (!equal(tk, ";")) {
+        if (i++ > 0) {
+            tk = skip(tk, ",");
+        }
 
-    if (equal(tk, "=")) {
+        Type *ty = declarator(&tk, tk, basety);
+        Obj *var = new_lvar(get_ident(ty->name), ty);
+
+        if (!equal(tk, "=")) {
+            continue;
+        }
+
         Node *lhs = new_var_node(var, tk);
         Node *rhs = expr(&tk, tk->next);
         Node *node = new_binary(ND_ASSIGN, lhs, rhs, tk);
         cur->next = new_unary(ND_EXPR_STMT, node, tk);
+        cur = cur->next;
     }
 
     *rest = skip(tk, ";");
