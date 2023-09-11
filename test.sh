@@ -1,11 +1,16 @@
 #!/bin/bash
 
+cat << EOF | gcc -xc -c -o sub.o -
+int ret3() { return 3; }
+int ret5() { return 5; }
+EOF
+
 function assert() {
     expected="$1"
     input="$2"
 
     ./main "$input" > tmp.s || exit 1
-    gcc -o tmp tmp.s || exit 1
+    gcc -o tmp tmp.s sub.o || exit 1
     ./tmp; actual="$?"
 
     if [ "$actual" != "$expected" ]; then
@@ -78,5 +83,8 @@ assert 7 '{ int x = 3; int y = 5; *(&y - 1) = 7; return x; }'
 assert 5 '{ int x = 3; return (&x + 2) - &x + 3; }'
 assert 8 '{ int x, y; x = 3; y = 5; return x + y; }'
 assert 8 '{ int x = 3, y = 5; return x + y; }'
+
+assert 3 '{ return ret3(); }'
+assert 5 '{ return ret5(); }'
 
 echo 'Success!'

@@ -10,12 +10,12 @@ all: main
 
 .PHONY: test
 test: main test.sh Makefile
-	-./test.sh
+	-bash test.sh
 
 .PHONY: clean
 clean:
 	-rm -f main main.o tokenize.o parse.o type.o codegen.o
-	-rm -f tmp tmp.s
+	-rm -f tmp tmp.s sub.o
 
 main: main.o tokenize.o parse.o type.o codegen.o Makefile
 	$(CC) -o $@ $(filter-out Makefile, $^)
