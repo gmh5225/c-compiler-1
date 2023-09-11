@@ -171,9 +171,9 @@ static Node *declaration(Token **rest, Token *tk) {
         cur = cur->next;
     }
 
-    *rest = skip(tk, ";");
     Node *node = new_node(ND_BLOCK, tk);
     node->body = head.next;
+    *rest = skip(tk, ";");
     return node;
 }
 
