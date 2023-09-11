@@ -146,20 +146,25 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
 
 // declaration = declspec declarator ("=" expr)? ";"
 static Node *declaration(Token **rest, Token *tk) {
-    Type *ty = declspec(&tk, tk);
-    ty = declarator(&tk, tk, ty);
+    Type *basety = declspec(&tk, tk);
+
+    Node head = {0};
+    Node *cur = &head;
+
+    Type *ty = declarator(&tk, tk, basety);
     Obj *var = new_lvar(get_ident(ty->name), ty);
 
     if (equal(tk, "=")) {
-        Node *node = new_node(ND_ASSIGN, tk);
-        node->lhs = new_var_node(var, tk);
-        node->rhs = expr(&tk, tk->next);
-        *rest = skip(tk, ";");
-        return new_unary(ND_EXPR_STMT, node, tk);
+        Node *lhs = new_var_node(var, tk);
+        Node *rhs = expr(&tk, tk->next);
+        Node *node = new_binary(ND_ASSIGN, lhs, rhs, tk);
+        cur->next = new_unary(ND_EXPR_STMT, node, tk);
     }
 
     *rest = skip(tk, ";");
-    return NULL;
+    Node *node = new_node(ND_BLOCK, tk);
+    node->body = head.next;
+    return node;
 }
 
 // stmt = "return" expr ";"
@@ -229,16 +234,14 @@ static Node *compound_stmt(Token **rest, Token *tk) {
     Node *cur = &head;
 
     while (!equal(tk, "}")) {
+        Node *node;
         if (equal(tk, "int")) {
-            Node *node = declaration(&tk, tk);
-            if (node != NULL) {
-                cur->next = node;
-                cur = cur->next;
-            }
-            continue;
+            node = declaration(&tk, tk);
+        } else {
+            node = stmt(&tk, tk);
         }
 
-        cur->next = stmt(&tk, tk);
+        cur->next = node;
         cur = cur->next;
         add_type(cur);
     }

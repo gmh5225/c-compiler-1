@@ -9,7 +9,7 @@ CFLAGS += -O2
 all: main
 
 .PHONY: test
-test: test.sh main
+test: main test.sh Makefile
 	-./test.sh
 
 .PHONY: clean
@@ -17,20 +17,20 @@ clean:
 	-rm -f main main.o tokenize.o parse.o type.o codegen.o
 	-rm -f tmp tmp.s
 
-main: main.o tokenize.o parse.o type.o codegen.o
-	$(CC) -o $@ $^
+main: main.o tokenize.o parse.o type.o codegen.o Makefile
+	$(CC) -o $@ $(filter-out Makefile, $^)
 
-main.o: main.c main.h
+main.o: main.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-tokenize.o: tokenize.c main.h
+tokenize.o: tokenize.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-parse.o: parse.c main.h
+parse.o: parse.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-type.o: type.c main.h
+type.o: type.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-codegen.o: codegen.c main.h
+codegen.o: codegen.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
