@@ -7,6 +7,7 @@
 
 typedef struct Token Token;
 
+// Token kind
 typedef enum {
     TK_IDENT,
     TK_PUNCT,
@@ -15,12 +16,17 @@ typedef enum {
     TK_EOF,
 } TokenKind;
 
+// Token
 struct Token {
     TokenKind kind;
+    Token *next;
+
+    // Integer literal
     long long val;
+
+    // Identifier
     char *loc;
     size_t len;
-    Token *next;
 };
 
 int error(char *fmt, ...);
@@ -40,6 +46,7 @@ typedef struct Obj Obj;
 typedef struct Function Function;
 typedef struct Type Type;
 
+// Local variable
 struct Obj {
     char *name;
     Type *ty;
@@ -47,12 +54,14 @@ struct Obj {
     Obj *next;
 };
 
+// Function
 struct Function {
     Node *body;
     int stack_size;
     Obj *locals;
 };
 
+// AST node kind
 typedef enum {
     ND_ADD,
     ND_SUB,
@@ -78,24 +87,37 @@ typedef enum {
     ND_NUM,
 } NodeKind;
 
+// AST node
 struct Node {
     NodeKind kind;
     Token *tk;
 
+// Expression
     Type *ty;
-    Obj *var;
-    long long val;
-    char *funcname;
     Node *lhs;
     Node *rhs;
 
+    // Variable
+    Obj *var;
+
+    // Integer literal
+    long long val;
+
+    // Function call
+    char *funcname;
+
+// Statement
+    Node *next;
+
+    // Block
+    Node *body;
+
+    // if or for
     Node *cond;
     Node *then;
     Node *els;
     Node *init;
     Node *inc;
-    Node *body;
-    Node *next;
 };
 
 Function *parse(Token *tk);
@@ -104,14 +126,20 @@ Function *parse(Token *tk);
 // Types
 //
 
+// Type node kind
 typedef enum {
     TY_INT,
     TY_PTR,
 } TypeKind;
 
+// Type node
 struct Type {
     TypeKind kind;
+
+    // Pointer
     Type *base;
+
+    // Declaration
     Token *name;
 };
 
