@@ -433,10 +433,23 @@ static Node *funccall(Token **rest, Token *tk) {
     Token *start = tk;
     tk = tk->next->next;
 
+    Node head = {0};
+    Node *cur = &head;
+
+    while (!equal(tk, ")")) {
+        if (cur != &head) {
+            tk = skip(tk, ",");
+        }
+
+        cur->next = assign(&tk, tk);
+        cur = cur->next;
+    }
+
     *rest = skip(tk, ")");
 
     Node *node = new_node(ND_FUNC_CALL, start);
     node->funcname = strndup(start->loc, start->len);
+    node->args = head.next;
     return node;
 }
 
