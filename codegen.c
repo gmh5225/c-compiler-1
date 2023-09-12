@@ -5,6 +5,7 @@
 #include "main.h"
 
 static int depth = 0;
+static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
 
 static int count(void) {
     static int i = 0;
@@ -90,10 +91,22 @@ static void gen_expr(Node *node) {
         pop("x1");
         printf("\tstr x0, [x1]\n");
         return;
-    case ND_FUNC_CALL:
-        printf("\tmov x0, #0\n");
+    case ND_FUNC_CALL: {
+        int nargs = 0;
+        Node *arg = node->args;
+        while (arg != NULL) {
+            gen_expr(arg);
+            push("x0");
+            arg = arg->next;
+            nargs += 1;
+        }
+        assert(nargs <= 8);
+        for (int i = nargs - 1; i >= 0; --i) {
+            pop(argreg[i]);
+        }
         printf("\tbl %s\n", node->funcname);
         return;
+    }
     default:
         break;
     }

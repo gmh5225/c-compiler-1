@@ -105,6 +105,7 @@ struct Node {
 
     // Function call
     char *funcname;
+    Node *args;
 
 // Statement
     Node *next;
