@@ -428,10 +428,22 @@ static Node *unary(Token **rest, Token *tk) {
     return primary(rest, tk);
 }
 
+// funccall = ident "(" ")"
+static Node *funccall(Token **rest, Token *tk) {
+    Token *start = tk;
+    tk = tk->next->next;
+
+    *rest = skip(tk, ")");
+
+    Node *node = new_node(ND_FUNC_CALL, start);
+    node->funcname = strndup(start->loc, start->len);
+    return node;
+}
+
 // primary = "(" expr ")"
-//         | ident args?
+//         | funccall
+//         | ident
 //         | num
-// args = "(" ")"
 static Node *primary(Token **rest, Token *tk) {
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
@@ -441,10 +453,7 @@ static Node *primary(Token **rest, Token *tk) {
 
     if (tk->kind == TK_IDENT) {
         if (equal(tk->next, "(")) {
-            Node *node = new_node(ND_FUNC_CALL, tk);
-            node->funcname = strndup(tk->loc, tk->len);
-            *rest = skip(tk->next->next, ")");
-            return node;
+            return funccall(rest, tk);
         }
 
         Obj *var = find_var(tk);
