@@ -503,9 +503,10 @@ static Node *primary(Token **rest, Token *tk) {
 Function *parse(Token *tk) {
     Type *ty = declspec(&tk, tk);
     ty = declarator(&tk, tk, ty);
-    tk = skip(tk, "{");
 
     Function *fn = calloc(1, sizeof(Function));
+    fn->name = get_ident(ty->name);
+    tk = skip(tk, "{");
     fn->body = compound_stmt(&tk, tk);
     fn->locals = locals;
     return fn;

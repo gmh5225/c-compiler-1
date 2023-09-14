@@ -6,6 +6,7 @@
 
 static int depth = 0;
 static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
+static Function *current_fn = NULL;
 
 static int count(void) {
     static int i = 0;
@@ -206,7 +207,7 @@ static void gen_stmt(Node *node) {
         return;
     case ND_RETURN:
         gen_expr(node->lhs);
-        printf("\tb .L.return\n");
+        printf("\tb .L.return.%s\n", current_fn->name);
         return;
     case ND_EXPR_STMT:
         gen_expr(node->lhs);
@@ -230,8 +231,9 @@ static void assign_lvar_offsets(Function *prog) {
 void codegen(Function *prog) {
     assign_lvar_offsets(prog);
 
-    printf("\t.global main\n");
-    printf("main:\n");
+    current_fn = prog;
+    printf("\t.global %s\n", prog->name);
+    printf("%s:\n", prog->name);
 
     printf("\tstp x29, x30, [sp, #-16]!\n");
     printf("\tmov x29, sp\n");
@@ -240,7 +242,7 @@ void codegen(Function *prog) {
     gen_stmt(prog->body);
     assert(depth == 0);
 
-    printf(".L.return:\n");
+    printf(".L.return.%s:\n", prog->name);
     printf("\tmov sp, x29\n");
     printf("\tldp x29, x30, [sp], #16\n");
     printf("\tret\n");
