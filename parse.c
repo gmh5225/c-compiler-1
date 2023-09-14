@@ -130,7 +130,7 @@ static Type *declspec(Token **rest, Token *tk) {
     return ty_int;
 }
 
-// type-suffix = "(" ")"
+// type-suffix = ("(" ")")?
 static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
     if (equal(tk, "(")) {
         *rest = skip(tk->next, ")");
