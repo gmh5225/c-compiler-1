@@ -130,7 +130,18 @@ static Type *declspec(Token **rest, Token *tk) {
     return ty_int;
 }
 
-// declarator = "*"* ident
+// type-suffix = "(" ")"
+static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
+    if (equal(tk, "(")) {
+        *rest = skip(tk->next, ")");
+        return func_type(ty);
+    }
+
+    *rest = tk;
+    return ty;
+}
+
+// declarator = "*"* ident type-suffix
 static Type *declarator(Token **rest, Token *tk, Type *ty) {
     while (consume(&tk, tk, "*")) {
         ty = pointer_to(ty);
@@ -141,8 +152,8 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
         return NULL;
     }
 
+    ty = type_suffix(rest, tk->next, ty);
     ty->name = tk;
-    *rest = tk->next;
     return ty;
 }
 
@@ -490,9 +501,12 @@ static Node *primary(Token **rest, Token *tk) {
 
 // program = stmt*
 Function *parse(Token *tk) {
+    Type *ty = declspec(&tk, tk);
+    ty = declarator(&tk, tk, ty);
     tk = skip(tk, "{");
-    Function *prog = calloc(1, sizeof(Function));
-    prog->body = compound_stmt(&tk, tk);
-    prog->locals = locals;
-    return prog;
+
+    Function *fn = calloc(1, sizeof(Function));
+    fn->body = compound_stmt(&tk, tk);
+    fn->locals = locals;
+    return fn;
 }
