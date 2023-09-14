@@ -98,4 +98,6 @@ assert 2 'int main() { return sub(5, 3); }'
 assert 36 'int main() { return add8(1, 2, 3, 4, 5, 6, 7, 8); }'
 assert 120 'int main() { return add8(1, 2, 3, add8(4, 5, 6, 7, 8, 9, 10, 11), 12, 13, 14, 15); }'
 
+assert 32 'int main() { return ret32(); } int ret32() { return 32; }'
+
 echo 'Success!'

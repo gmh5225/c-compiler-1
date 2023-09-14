@@ -219,32 +219,38 @@ static void gen_stmt(Node *node) {
 }
 
 static void assign_lvar_offsets(Function *prog) {
-    int offset = 0;
-    for (Obj *v = prog->locals; v != NULL; v = v->next) {
-        v->offset = offset += 8;
+    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+        int offset = 0;
+        for (Obj *v = prog->locals; v != NULL; v = v->next) {
+            v->offset = offset += 8;
+        }
+
+        prog->stack_size = align_to(offset, 16);
     }
 
-    prog->stack_size = align_to(offset, 16);
     return;
 }
 
 void codegen(Function *prog) {
     assign_lvar_offsets(prog);
 
-    current_fn = prog;
-    printf("\t.global %s\n", prog->name);
-    printf("%s:\n", prog->name);
+    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+        current_fn = fn;
+        printf("\t.global %s\n", fn->name);
+        printf("%s:\n", fn->name);
 
-    printf("\tstp x29, x30, [sp, #-16]!\n");
-    printf("\tmov x29, sp\n");
-    printf("\tsub sp, sp, #%d\n", prog->stack_size);
+        printf("\tstp x29, x30, [sp, #-16]!\n");
+        printf("\tmov x29, sp\n");
+        printf("\tsub sp, sp, #%d\n", fn->stack_size);
 
-    gen_stmt(prog->body);
-    assert(depth == 0);
+        gen_stmt(fn->body);
+        assert(depth == 0);
 
-    printf(".L.return.%s:\n", prog->name);
-    printf("\tmov sp, x29\n");
-    printf("\tldp x29, x30, [sp], #16\n");
-    printf("\tret\n");
+        printf(".L.return.%s:\n", fn->name);
+        printf("\tmov sp, x29\n");
+        printf("\tldp x29, x30, [sp], #16\n");
+        printf("\tret\n");
+    }
+
     return;
 }

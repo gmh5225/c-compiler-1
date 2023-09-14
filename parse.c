@@ -499,15 +499,29 @@ static Node *primary(Token **rest, Token *tk) {
     return NULL;
 }
 
-// program = stmt*
-Function *parse(Token *tk) {
+// function = declspec declarator "{" compound-stmt
+Function *function(Token **rest, Token *tk) {
     Type *ty = declspec(&tk, tk);
     ty = declarator(&tk, tk, ty);
+    locals = NULL;
 
     Function *fn = calloc(1, sizeof(Function));
     fn->name = get_ident(ty->name);
     tk = skip(tk, "{");
-    fn->body = compound_stmt(&tk, tk);
+    fn->body = compound_stmt(rest, tk);
     fn->locals = locals;
     return fn;
+}
+
+// parse = function*
+Function *parse(Token *tk) {
+    Function head = {0};
+    Function *cur = &head;
+
+    while (tk->kind != TK_EOF) {
+        cur->next = function(&tk, tk);
+        cur = cur->next;
+    }
+
+    return head.next;
 }
