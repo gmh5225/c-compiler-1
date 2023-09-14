@@ -6,6 +6,7 @@
 
 static int depth = 0;
 static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
+static Function *current_fn = NULL;
 
 static int count(void) {
     static int i = 0;
@@ -206,7 +207,7 @@ static void gen_stmt(Node *node) {
         return;
     case ND_RETURN:
         gen_expr(node->lhs);
-        printf("\tb .L.return\n");
+        printf("\tb .L.return.%s\n", current_fn->name);
         return;
     case ND_EXPR_STMT:
         gen_expr(node->lhs);
@@ -218,31 +219,38 @@ static void gen_stmt(Node *node) {
 }
 
 static void assign_lvar_offsets(Function *prog) {
-    int offset = 0;
-    for (Obj *v = prog->locals; v != NULL; v = v->next) {
-        v->offset = offset += 8;
+    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+        int offset = 0;
+        for (Obj *v = prog->locals; v != NULL; v = v->next) {
+            v->offset = offset += 8;
+        }
+
+        prog->stack_size = align_to(offset, 16);
     }
 
-    prog->stack_size = align_to(offset, 16);
     return;
 }
 
 void codegen(Function *prog) {
     assign_lvar_offsets(prog);
 
-    printf("\t.global main\n");
-    printf("main:\n");
+    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+        current_fn = fn;
+        printf("\t.global %s\n", fn->name);
+        printf("%s:\n", fn->name);
 
-    printf("\tstp x29, x30, [sp, #-16]!\n");
-    printf("\tmov x29, sp\n");
-    printf("\tsub sp, sp, #%d\n", prog->stack_size);
+        printf("\tstp x29, x30, [sp, #-16]!\n");
+        printf("\tmov x29, sp\n");
+        printf("\tsub sp, sp, #%d\n", fn->stack_size);
 
-    gen_stmt(prog->body);
-    assert(depth == 0);
+        gen_stmt(fn->body);
+        assert(depth == 0);
 
-    printf(".L.return:\n");
-    printf("\tmov sp, x29\n");
-    printf("\tldp x29, x30, [sp], #16\n");
-    printf("\tret\n");
+        printf(".L.return.%s:\n", fn->name);
+        printf("\tmov sp, x29\n");
+        printf("\tldp x29, x30, [sp], #16\n");
+        printf("\tret\n");
+    }
+
     return;
 }
