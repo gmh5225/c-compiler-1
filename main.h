@@ -58,6 +58,8 @@ struct Obj {
 struct Function {
     Function *next;
     char *name;
+    Obj *params;
+
     Node *body;
     int stack_size;
     Obj *locals;
@@ -148,6 +150,8 @@ struct Type {
 
     // Function type
     Type *return_ty;
+    Type *params;
+    Type *next;
 };
 
 extern Type *ty_int;

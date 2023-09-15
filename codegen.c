@@ -243,6 +243,11 @@ void codegen(Function *prog) {
         printf("\tmov x29, sp\n");
         printf("\tsub sp, sp, #%d\n", fn->stack_size);
 
+        int i = 0;
+        for (Obj *v = fn->params; v != NULL; v = v->next) {
+            printf("\tstr %s, [x29, #-%d]\n", argreg[i++], v->offset);
+        }
+
         gen_stmt(fn->body);
         assert(depth == 0);
 
