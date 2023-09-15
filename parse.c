@@ -115,6 +115,8 @@ static Node *mul(Token **rest, Token *tk);
 static Node *unary(Token **rest, Token *tk);
 static Node *primary(Token **rest, Token *tk);
 
+static Type *type_suffix(Token **rest, Token *tk, Type *ty);
+
 static char *get_ident(Token *tk) {
     if (tk->kind != TK_IDENT) {
         error_tk(tk, "Expected an identifier");
@@ -130,17 +132,6 @@ static Type *declspec(Token **rest, Token *tk) {
     return ty_int;
 }
 
-// type-suffix = ("(" ")")?
-static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
-    if (equal(tk, "(")) {
-        *rest = skip(tk->next, ")");
-        return func_type(ty);
-    }
-
-    *rest = tk;
-    return ty;
-}
-
 // declarator = "*"* ident type-suffix
 static Type *declarator(Token **rest, Token *tk, Type *ty) {
     while (consume(&tk, tk, "*")) {
@@ -154,6 +145,38 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
 
     ty = type_suffix(rest, tk->next, ty);
     ty->name = tk;
+    return ty;
+}
+
+// type-suffix = ("(" func-params? ")")?
+// func-params = param ("," param)*
+// param       = declspec declarator
+static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
+    if (equal(tk, "(")) {
+        tk = tk->next;
+
+        Type head = {0};
+        Type *cur = &head;
+
+        while (!equal(tk, ")")) {
+            if (cur != &head) {
+                tk = skip(tk, ",");
+            }
+
+            Type *basety = declspec(&tk, tk);
+            Type *ty = declarator(&tk, tk, basety);
+
+            cur->next = copy_type(ty);
+            cur = cur->next;
+        }
+
+        ty = func_type(ty);
+        ty->params = head.next;
+        *rest = tk->next;
+        return ty;
+    }
+
+    *rest = tk;
     return ty;
 }
 
@@ -499,6 +522,16 @@ static Node *primary(Token **rest, Token *tk) {
     return NULL;
 }
 
+static void create_param_lvars(Type *params) {
+    if (params == NULL) {
+        return;
+    }
+
+    create_param_lvars(params->next);
+    new_lvar(get_ident(params->name), params);
+    return;
+}
+
 // function = declspec declarator "{" compound-stmt
 Function *function(Token **rest, Token *tk) {
     Type *ty = declspec(&tk, tk);
@@ -507,6 +540,9 @@ Function *function(Token **rest, Token *tk) {
 
     Function *fn = calloc(1, sizeof(Function));
     fn->name = get_ident(ty->name);
+    create_param_lvars(ty->params);
+    fn->params = locals;
+
     tk = skip(tk, "{");
     fn->body = compound_stmt(rest, tk);
     fn->locals = locals;
