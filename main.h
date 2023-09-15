@@ -157,6 +157,7 @@ struct Type {
 extern Type *ty_int;
 
 bool is_integer(Type *ty);
+Type *copy_type(Type *ty);
 Type *pointer_to(Type *base);
 Type *func_type(Type *return_ty);
 void add_type(Node *node);

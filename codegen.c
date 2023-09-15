@@ -221,11 +221,11 @@ static void gen_stmt(Node *node) {
 static void assign_lvar_offsets(Function *prog) {
     for (Function *fn = prog; fn != NULL; fn = fn->next) {
         int offset = 0;
-        for (Obj *v = prog->locals; v != NULL; v = v->next) {
+        for (Obj *v = fn->locals; v != NULL; v = v->next) {
             v->offset = offset += 8;
         }
 
-        prog->stack_size = align_to(offset, 16);
+        fn->stack_size = align_to(offset, 16);
     }
 
     return;

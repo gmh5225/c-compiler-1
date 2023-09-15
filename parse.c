@@ -166,7 +166,7 @@ static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
             Type *basety = declspec(&tk, tk);
             Type *ty = declarator(&tk, tk, basety);
 
-            cur->next = ty;
+            cur->next = copy_type(ty);
             cur = cur->next;
         }
 
