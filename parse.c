@@ -132,7 +132,7 @@ static Type *declspec(Token **rest, Token *tk) {
     return ty_int;
 }
 
-// declarator = "*"* ident type-suffix
+// declarator = "*"* ident type-suffix?
 static Type *declarator(Token **rest, Token *tk, Type *ty) {
     while (consume(&tk, tk, "*")) {
         ty = pointer_to(ty);
@@ -148,32 +148,35 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
     return ty;
 }
 
-// type-suffix = ("(" func-params? ")")?
-// func-params = param ("," param)*
+// func-params = (param ("," param)*)? ")"
 // param       = declspec declarator
-static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
-    if (equal(tk, "(")) {
-        tk = tk->next;
+static Type *func_params(Token **rest, Token *tk, Type *ty) {
+    Type head = {0};
+    Type *cur = &head;
 
-        Type head = {0};
-        Type *cur = &head;
-
-        while (!equal(tk, ")")) {
-            if (cur != &head) {
-                tk = skip(tk, ",");
-            }
-
-            Type *basety = declspec(&tk, tk);
-            Type *ty = declarator(&tk, tk, basety);
-
-            cur->next = copy_type(ty);
-            cur = cur->next;
+    while (!equal(tk, ")")) {
+        if (cur != &head) {
+            tk = skip(tk, ",");
         }
 
-        ty = func_type(ty);
-        ty->params = head.next;
-        *rest = tk->next;
-        return ty;
+        Type *basety = declspec(&tk, tk);
+        Type *ty = declarator(&tk, tk, basety);
+
+        cur->next = copy_type(ty);
+        cur = cur->next;
+    }
+
+    ty = func_type(ty);
+    ty->params = head.next;
+    *rest = tk->next;
+    return ty;
+}
+
+// type-suffix = "(" func-params
+//             | "[" num "]"
+static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
+    if (equal(tk, "(")) {
+        return func_params(rest, tk->next, ty);
     }
 
     *rest = tk;
