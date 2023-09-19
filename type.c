@@ -30,7 +30,11 @@ Type *func_type(Type *return_ty) {
 }
 
 void add_type(Node *node) {
-    if (!node || node->ty) {
+    if (node == NULL) {
+        return;
+    }
+
+    if (node->ty != NULL) {
         return;
     }
 
