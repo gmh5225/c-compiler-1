@@ -29,6 +29,14 @@ Type *func_type(Type *return_ty) {
     return ty;
 }
 
+Type *array_of(Type *base, int len) {
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_ARRAY;
+    ty->base = base;
+    ty->array_len = len;
+    return ty;
+}
+
 void add_type(Node *node) {
     if (node == NULL) {
         return;

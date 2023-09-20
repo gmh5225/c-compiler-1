@@ -126,6 +126,15 @@ static char *get_ident(Token *tk) {
     return strndup(tk->loc, tk->len);
 }
 
+static int get_number(Token *tk) {
+    if (tk->kind != TK_NUM) {
+        error_tk(tk, "Expected a number");
+        return 0;
+    }
+
+    return tk->val;
+}
+
 // declspec = "int"
 static Type *declspec(Token **rest, Token *tk) {
     *rest = skip(tk, "int");
@@ -177,6 +186,12 @@ static Type *func_params(Token **rest, Token *tk, Type *ty) {
 static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
     if (equal(tk, "(")) {
         return func_params(rest, tk->next, ty);
+    }
+
+    if (equal(tk, "[")) {
+        int len = get_number(tk->next);
+        *rest = skip(tk->next->next, "]");
+        return array_of(ty, len);
     }
 
     *rest = tk;
