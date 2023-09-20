@@ -188,7 +188,8 @@ static Type *func_params(Token **rest, Token *tk, Type *ty) {
 }
 
 // type-suffix = "(" func-params
-//             | "[" num "]"
+//             | "[" num "]" type-suffix
+//             | _
 static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
     if (equal(tk, "(")) {
         return func_params(rest, tk->next, ty);
@@ -196,7 +197,8 @@ static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
 
     if (equal(tk, "[")) {
         int len = get_number(tk->next);
-        *rest = skip(tk->next->next, "]");
+        tk = skip(tk->next->next, "]");
+        ty = type_suffix(rest, tk, ty);
         return array_of(ty, len);
     }
 
