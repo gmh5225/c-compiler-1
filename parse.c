@@ -531,6 +531,7 @@ static Node *funccall(Token **rest, Token *tk) {
 }
 
 // primary = "(" expr ")"
+//         | "sizeof" unary
 //         | funccall
 //         | ident
 //         | num
@@ -539,6 +540,12 @@ static Node *primary(Token **rest, Token *tk) {
         Node *node = expr(&tk, tk->next);
         *rest = skip(tk, ")");
         return node;
+    }
+
+    if (equal(tk, "sizeof")) {
+        Node *node = unary(rest, tk->next);
+        add_type(node);
+        return new_num(node->ty->size, tk);
     }
 
     if (tk->kind == TK_IDENT) {
