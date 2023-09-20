@@ -76,7 +76,7 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tk) {
     // ptr + num
     if (is_integer(lhs->ty) && rhs->ty->base != NULL) {
         lhs = new_binary(ND_MUL, lhs, new_num(rhs->ty->base->size, tk), tk);
-        return new_binary(ND_ADD, lhs, rhs, tk);
+        return new_binary(ND_ADD, rhs, lhs, tk);
     }
 
     error_tk(tk, "Invalid operands");
@@ -119,6 +119,7 @@ static Node *relational(Token **rest, Token *tk);
 static Node *add(Token **rest, Token *tk);
 static Node *mul(Token **rest, Token *tk);
 static Node *unary(Token **rest, Token *tk);
+static Node *postfix(Token **rest, Token *tk);
 static Node *primary(Token **rest, Token *tk);
 
 static Type *type_suffix(Token **rest, Token *tk, Type *ty);
@@ -464,7 +465,7 @@ static Node *mul(Token **rest, Token *tk) {
 }
 
 // unary = ("+" | "-" | "*" | "&") unary
-//       | primary
+//       | postfix
 static Node *unary(Token **rest, Token *tk) {
     if (equal(tk, "+")) {
         return unary(rest, tk->next);
@@ -485,7 +486,23 @@ static Node *unary(Token **rest, Token *tk) {
         return new_unary(ND_ADDR, node, tk);
     }
 
-    return primary(rest, tk);
+    return postfix(rest, tk);
+}
+
+// postfix = primary ("[" expr "]")*
+static Node *postfix(Token **rest, Token *tk) {
+    Node *node = primary(&tk, tk);
+
+    while (equal(tk, "[")) {
+        Token *start = tk;
+        Node *idx = expr(&tk, tk->next);
+        tk = skip(tk, "]");
+        node = new_add(node, idx, start);
+        node = new_unary(ND_DEREF, node, start);
+    }
+
+    *rest = tk;
+    return node;
 }
 
 // funccall = ident "(" ")"
