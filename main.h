@@ -142,6 +142,7 @@ typedef enum {
 // Type node
 struct Type {
     TypeKind kind;
+    int size;
 
     // Declaration
     Token *name;

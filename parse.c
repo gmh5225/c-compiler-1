@@ -62,17 +62,20 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tk) {
     add_type(lhs);
     add_type(rhs);
 
+    // num + num
     if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
         return new_binary(ND_ADD, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && is_integer(rhs->ty)) {
-        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+    // num + ptr
+    if (lhs->ty->base != NULL && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size, tk), tk);
         return new_binary(ND_ADD, lhs, rhs, tk);
     }
 
-    if (is_integer(lhs->ty) && rhs->ty->base) {
-        lhs = new_binary(ND_MUL, lhs, new_num(8, tk), tk);
+    // ptr + num
+    if (is_integer(lhs->ty) && rhs->ty->base != NULL) {
+        lhs = new_binary(ND_MUL, lhs, new_num(rhs->ty->base->size, tk), tk);
         return new_binary(ND_ADD, lhs, rhs, tk);
     }
 
@@ -84,19 +87,22 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
     add_type(lhs);
     add_type(rhs);
 
+    // num - num
     if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
         return new_binary(ND_SUB, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && is_integer(rhs->ty)) {
-        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+    // ptr - num
+    if (lhs->ty->base != NULL && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size, tk), tk);
         return new_binary(ND_SUB, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && rhs->ty->base) {
+    // ptr - ptr
+    if (lhs->ty->base != NULL && rhs->ty->base != NULL) {
         Node *node = new_binary(ND_SUB, lhs, rhs, tk);
         node->ty = ty_int;
-        return new_binary(ND_DIV, node, new_num(8, tk), tk);
+        return new_binary(ND_DIV, node, new_num(lhs->ty->base->size, tk), tk);
     }
 
     error_tk(tk, "Invalid operands");
