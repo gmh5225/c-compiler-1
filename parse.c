@@ -62,18 +62,21 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tk) {
     add_type(lhs);
     add_type(rhs);
 
+    // num + num
     if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
         return new_binary(ND_ADD, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && is_integer(rhs->ty)) {
-        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+    // num + ptr
+    if (lhs->ty->base != NULL && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size, tk), tk);
         return new_binary(ND_ADD, lhs, rhs, tk);
     }
 
-    if (is_integer(lhs->ty) && rhs->ty->base) {
-        lhs = new_binary(ND_MUL, lhs, new_num(8, tk), tk);
-        return new_binary(ND_ADD, lhs, rhs, tk);
+    // ptr + num
+    if (is_integer(lhs->ty) && rhs->ty->base != NULL) {
+        lhs = new_binary(ND_MUL, lhs, new_num(rhs->ty->base->size, tk), tk);
+        return new_binary(ND_ADD, rhs, lhs, tk);
     }
 
     error_tk(tk, "Invalid operands");
@@ -84,19 +87,22 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
     add_type(lhs);
     add_type(rhs);
 
+    // num - num
     if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
         return new_binary(ND_SUB, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && is_integer(rhs->ty)) {
-        rhs = new_binary(ND_MUL, rhs, new_num(8, tk), tk);
+    // ptr - num
+    if (lhs->ty->base != NULL && is_integer(rhs->ty)) {
+        rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size, tk), tk);
         return new_binary(ND_SUB, lhs, rhs, tk);
     }
 
-    if (lhs->ty->base && rhs->ty->base) {
+    // ptr - ptr
+    if (lhs->ty->base != NULL && rhs->ty->base != NULL) {
         Node *node = new_binary(ND_SUB, lhs, rhs, tk);
         node->ty = ty_int;
-        return new_binary(ND_DIV, node, new_num(8, tk), tk);
+        return new_binary(ND_DIV, node, new_num(lhs->ty->base->size, tk), tk);
     }
 
     error_tk(tk, "Invalid operands");
@@ -113,6 +119,7 @@ static Node *relational(Token **rest, Token *tk);
 static Node *add(Token **rest, Token *tk);
 static Node *mul(Token **rest, Token *tk);
 static Node *unary(Token **rest, Token *tk);
+static Node *postfix(Token **rest, Token *tk);
 static Node *primary(Token **rest, Token *tk);
 
 static Type *type_suffix(Token **rest, Token *tk, Type *ty);
@@ -126,13 +133,22 @@ static char *get_ident(Token *tk) {
     return strndup(tk->loc, tk->len);
 }
 
+static int get_number(Token *tk) {
+    if (tk->kind != TK_NUM) {
+        error_tk(tk, "Expected a number");
+        return 0;
+    }
+
+    return tk->val;
+}
+
 // declspec = "int"
 static Type *declspec(Token **rest, Token *tk) {
     *rest = skip(tk, "int");
     return ty_int;
 }
 
-// declarator = "*"* ident type-suffix
+// declarator = "*"* ident type-suffix?
 static Type *declarator(Token **rest, Token *tk, Type *ty) {
     while (consume(&tk, tk, "*")) {
         ty = pointer_to(ty);
@@ -148,32 +164,43 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
     return ty;
 }
 
-// type-suffix = ("(" func-params? ")")?
-// func-params = param ("," param)*
+// func-params = (param ("," param)*)? ")"
 // param       = declspec declarator
-static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
-    if (equal(tk, "(")) {
-        tk = tk->next;
+static Type *func_params(Token **rest, Token *tk, Type *ty) {
+    Type head = {0};
+    Type *cur = &head;
 
-        Type head = {0};
-        Type *cur = &head;
-
-        while (!equal(tk, ")")) {
-            if (cur != &head) {
-                tk = skip(tk, ",");
-            }
-
-            Type *basety = declspec(&tk, tk);
-            Type *ty = declarator(&tk, tk, basety);
-
-            cur->next = copy_type(ty);
-            cur = cur->next;
+    while (!equal(tk, ")")) {
+        if (cur != &head) {
+            tk = skip(tk, ",");
         }
 
-        ty = func_type(ty);
-        ty->params = head.next;
-        *rest = tk->next;
-        return ty;
+        Type *basety = declspec(&tk, tk);
+        Type *ty = declarator(&tk, tk, basety);
+
+        cur->next = copy_type(ty);
+        cur = cur->next;
+    }
+
+    ty = func_type(ty);
+    ty->params = head.next;
+    *rest = tk->next;
+    return ty;
+}
+
+// type-suffix = "(" func-params
+//             | "[" num "]" type-suffix
+//             | _
+static Type *type_suffix(Token **rest, Token *tk, Type *ty) {
+    if (equal(tk, "(")) {
+        return func_params(rest, tk->next, ty);
+    }
+
+    if (equal(tk, "[")) {
+        int len = get_number(tk->next);
+        tk = skip(tk->next->next, "]");
+        ty = type_suffix(rest, tk, ty);
+        return array_of(ty, len);
     }
 
     *rest = tk;
@@ -438,7 +465,7 @@ static Node *mul(Token **rest, Token *tk) {
 }
 
 // unary = ("+" | "-" | "*" | "&") unary
-//       | primary
+//       | postfix
 static Node *unary(Token **rest, Token *tk) {
     if (equal(tk, "+")) {
         return unary(rest, tk->next);
@@ -459,7 +486,23 @@ static Node *unary(Token **rest, Token *tk) {
         return new_unary(ND_ADDR, node, tk);
     }
 
-    return primary(rest, tk);
+    return postfix(rest, tk);
+}
+
+// postfix = primary ("[" expr "]")*
+static Node *postfix(Token **rest, Token *tk) {
+    Node *node = primary(&tk, tk);
+
+    while (equal(tk, "[")) {
+        Token *start = tk;
+        Node *idx = expr(&tk, tk->next);
+        tk = skip(tk, "]");
+        node = new_add(node, idx, start);
+        node = new_unary(ND_DEREF, node, start);
+    }
+
+    *rest = tk;
+    return node;
 }
 
 // funccall = ident "(" ")"
