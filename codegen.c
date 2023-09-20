@@ -76,11 +76,15 @@ static void gen_expr(Node *node) {
         return;
     case ND_VAR:
         gen_addr(node);
-        printf("\tldr x0, [x0]\n");
+        if (node->ty->kind != TY_ARRAY) {
+            printf("\tldr x0, [x0]\n");
+        }
         return;
     case ND_DEREF:
         gen_expr(node->lhs);
-        printf("\tldr x0, [x0]\n");
+        if (node->ty->kind != TY_ARRAY) {
+            printf("\tldr x0, [x0]\n");
+        }
         return;
     case ND_ADDR:
         gen_addr(node->lhs);
@@ -222,7 +226,7 @@ static void assign_lvar_offsets(Function *prog) {
     for (Function *fn = prog; fn != NULL; fn = fn->next) {
         int offset = 0;
         for (Obj *v = fn->locals; v != NULL; v = v->next) {
-            v->offset = offset += 8;
+            v->offset = offset += v->ty->size;
         }
 
         fn->stack_size = align_to(offset, 16);

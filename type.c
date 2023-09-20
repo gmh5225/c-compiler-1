@@ -75,6 +75,7 @@ void add_type(Node *node) {
     case ND_ASSIGN:
         if (node->lhs->ty->kind == TY_ARRAY) {
             error_tk(node->tk, "Not an lvalue");
+            return;
         }
         node->ty = node->lhs->ty;
         return;
