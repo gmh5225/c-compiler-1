@@ -50,19 +50,20 @@ typedef struct Type Type;
 struct Obj {
     char *name;
     Type *ty;
-    int offset;
     Obj *next;
+
+    int offset;
 };
 
 // Function
 struct Function {
-    Function *next;
     char *name;
-    Obj *params;
+    Function *next;
 
+    Obj *params;
     Node *body;
-    int stack_size;
     Obj *locals;
+    int stack_size;
 };
 
 // AST node kind
