@@ -224,6 +224,10 @@ static void gen_stmt(Node *node) {
 
 static void assign_lvar_offsets(Obj *prog) {
     for (Obj *fn = prog; fn != NULL; fn = fn->next) {
+        if (!fn->is_function) {
+            continue;
+        }
+
         int offset = 0;
         for (Obj *v = fn->locals; v != NULL; v = v->next) {
             v->offset = offset += v->ty->size;
@@ -239,6 +243,10 @@ void codegen(Obj *prog) {
     assign_lvar_offsets(prog);
 
     for (Obj *fn = prog; fn != NULL; fn = fn->next) {
+        if (!fn->is_function) {
+            continue;
+        }
+
         current_fn = fn;
         printf("\t.global %s\n", fn->name);
         printf("%s:\n", fn->name);

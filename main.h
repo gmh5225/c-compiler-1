@@ -52,9 +52,11 @@ struct Obj {
     Obj *next;
 
     // Local variable
+    bool is_local;
     int offset;
 
     // Function
+    bool is_function;
     Obj *params;
     Node *body;
     Obj *locals;

@@ -54,6 +54,7 @@ static Obj *new_lvar(char *name, Type *ty) {
     var->name = name;
     var->ty = ty;
     var->next = locals;
+    var->is_local = true;
     locals = var;
     return var;
 }
@@ -592,6 +593,7 @@ Obj *function(Token **rest, Token *tk) {
     fn->name = get_ident(ty->name);
     create_param_lvars(ty->params);
     fn->params = locals;
+    fn->is_function = true;
 
     tk = skip(tk, "{");
     fn->body = compound_stmt(rest, tk);
