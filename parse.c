@@ -5,7 +5,8 @@
 #include <string.h>
 #include "main.h"
 
-Obj *locals;
+static Obj *locals;
+static Obj *globals;
 
 static Obj *find_var(Token *tk) {
     for (Obj *v = locals; v != NULL; v = v->next) {
@@ -61,6 +62,13 @@ static Obj *new_lvar(char *name, Type *ty) {
     var->is_local = true;
     var->next = locals;
     locals = var;
+    return var;
+}
+
+static Obj *new_gvar(char *name, Type *ty) {
+    Obj *var = new_var(name, ty);
+    var->next = globals;
+    globals = var;
     return var;
 }
 
