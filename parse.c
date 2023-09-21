@@ -597,16 +597,16 @@ static void create_param_lvars(Type *params) {
 }
 
 // function = declspec declarator "{" compound-stmt
-Obj *function(Token **rest, Token *tk) {
+static Obj *function(Token **rest, Token *tk) {
     Type *ty = declspec(&tk, tk);
     ty = declarator(&tk, tk, ty);
-    locals = NULL;
 
-    Obj *fn = calloc(1, sizeof(Obj));
-    fn->name = get_ident(ty->name);
+    Obj *fn = new_gvar(get_ident(ty->name), ty);
+    fn->is_function = true;
+
+    locals = NULL;
     create_param_lvars(ty->params);
     fn->params = locals;
-    fn->is_function = true;
 
     tk = skip(tk, "{");
     fn->body = compound_stmt(rest, tk);
@@ -616,13 +616,10 @@ Obj *function(Token **rest, Token *tk) {
 
 // parse = function*
 Obj *parse(Token *tk) {
-    Obj head = {0};
-    Obj *cur = &head;
-
+    globals = NULL;
     while (tk->kind != TK_EOF) {
-        cur->next = function(&tk, tk);
-        cur = cur->next;
+        function(&tk, tk);
     }
 
-    return head.next;
+    return globals;
 }
