@@ -49,12 +49,17 @@ static Node *new_var_node(Obj *var, Token *tk) {
     return node;
 }
 
-static Obj *new_lvar(char *name, Type *ty) {
+static Obj *new_var(char *name, Type *ty) {
     Obj *var = calloc(1, sizeof(Obj));
     var->name = name;
     var->ty = ty;
-    var->next = locals;
+    return var;
+}
+
+static Obj *new_lvar(char *name, Type *ty) {
+    Obj *var = new_var(name, ty);
     var->is_local = true;
+    var->next = locals;
     locals = var;
     return var;
 }
