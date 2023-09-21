@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     }
 
     Token *tk = tokenize(argv[1]);
-    Function *prog = parse(tk);
+    Obj *prog = parse(tk);
     codegen(prog);
     return EXIT_SUCCESS;
 }
