@@ -43,26 +43,24 @@ Token *tokenize(char *p);
 
 typedef struct Node Node;
 typedef struct Obj Obj;
-typedef struct Function Function;
 typedef struct Type Type;
 
-// Local variable
+// Variable or function
 struct Obj {
     char *name;
     Type *ty;
-    int offset;
     Obj *next;
-};
 
-// Function
-struct Function {
-    Function *next;
-    char *name;
+    // Local variable
+    bool is_local;
+    int offset;
+
+    // Function
+    bool is_function;
     Obj *params;
-
     Node *body;
-    int stack_size;
     Obj *locals;
+    int stack_size;
 };
 
 // AST node kind
@@ -125,7 +123,7 @@ struct Node {
     Node *inc;
 };
 
-Function *parse(Token *tk);
+Obj *parse(Token *tk);
 
 //
 // Types
@@ -172,6 +170,6 @@ void add_type(Node *node);
 // Code generator
 //
 
-void codegen(Function *prog);
+void codegen(Obj *prog);
 
 #endif

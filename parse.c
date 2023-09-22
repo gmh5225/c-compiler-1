@@ -5,7 +5,8 @@
 #include <string.h>
 #include "main.h"
 
-Obj *locals;
+static Obj *locals;
+static Obj *globals;
 
 static Obj *find_var(Token *tk) {
     for (Obj *v = locals; v != NULL; v = v->next) {
@@ -49,12 +50,25 @@ static Node *new_var_node(Obj *var, Token *tk) {
     return node;
 }
 
-static Obj *new_lvar(char *name, Type *ty) {
+static Obj *new_var(char *name, Type *ty) {
     Obj *var = calloc(1, sizeof(Obj));
     var->name = name;
     var->ty = ty;
+    return var;
+}
+
+static Obj *new_lvar(char *name, Type *ty) {
+    Obj *var = new_var(name, ty);
+    var->is_local = true;
     var->next = locals;
     locals = var;
+    return var;
+}
+
+static Obj *new_gvar(char *name, Type *ty) {
+    Obj *var = new_var(name, ty);
+    var->next = globals;
+    globals = var;
     return var;
 }
 
@@ -583,13 +597,14 @@ static void create_param_lvars(Type *params) {
 }
 
 // function = declspec declarator "{" compound-stmt
-Function *function(Token **rest, Token *tk) {
+static Obj *function(Token **rest, Token *tk) {
     Type *ty = declspec(&tk, tk);
     ty = declarator(&tk, tk, ty);
-    locals = NULL;
 
-    Function *fn = calloc(1, sizeof(Function));
-    fn->name = get_ident(ty->name);
+    Obj *fn = new_gvar(get_ident(ty->name), ty);
+    fn->is_function = true;
+
+    locals = NULL;
     create_param_lvars(ty->params);
     fn->params = locals;
 
@@ -600,14 +615,11 @@ Function *function(Token **rest, Token *tk) {
 }
 
 // parse = function*
-Function *parse(Token *tk) {
-    Function head = {0};
-    Function *cur = &head;
-
+Obj *parse(Token *tk) {
+    globals = NULL;
     while (tk->kind != TK_EOF) {
-        cur->next = function(&tk, tk);
-        cur = cur->next;
+        function(&tk, tk);
     }
 
-    return head.next;
+    return globals;
 }

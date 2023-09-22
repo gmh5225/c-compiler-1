@@ -6,7 +6,7 @@
 
 static int depth = 0;
 static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
-static Function *current_fn = NULL;
+static Obj *current_fn = NULL;
 
 static int count(void) {
     static int i = 0;
@@ -222,8 +222,12 @@ static void gen_stmt(Node *node) {
     }
 }
 
-static void assign_lvar_offsets(Function *prog) {
-    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+static void assign_lvar_offsets(Obj *prog) {
+    for (Obj *fn = prog; fn != NULL; fn = fn->next) {
+        if (!fn->is_function) {
+            continue;
+        }
+
         int offset = 0;
         for (Obj *v = fn->locals; v != NULL; v = v->next) {
             v->offset = offset += v->ty->size;
@@ -235,10 +239,14 @@ static void assign_lvar_offsets(Function *prog) {
     return;
 }
 
-void codegen(Function *prog) {
+void codegen(Obj *prog) {
     assign_lvar_offsets(prog);
 
-    for (Function *fn = prog; fn != NULL; fn = fn->next) {
+    for (Obj *fn = prog; fn != NULL; fn = fn->next) {
+        if (!fn->is_function) {
+            continue;
+        }
+
         current_fn = fn;
         printf("\t.global %s\n", fn->name);
         printf("%s:\n", fn->name);
