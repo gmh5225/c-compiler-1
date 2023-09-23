@@ -49,7 +49,11 @@ static void gen_addr(Node *node) {
 
     switch (node->kind) {
     case ND_VAR:
-        printf("\tsub x0, x29, #%d\n", node->var->offset);
+        if (node->var->is_local) {
+            printf("\tsub x0, x29, #%d\n", node->var->offset);
+        } else {
+            printf("\tadr x0, %s\n", node->var->name);
+        }
         return;
     case ND_DEREF:
         gen_expr(node->lhs);
@@ -239,8 +243,23 @@ static void assign_lvar_offsets(Obj *prog) {
     return;
 }
 
-void codegen(Obj *prog) {
-    assign_lvar_offsets(prog);
+static void gen_data(Obj *prog) {
+    for (Obj *v = prog; v != NULL; v = v->next) {
+        if (v->is_function) {
+            continue;
+        }
+
+        printf("\t.data\n");
+        printf("\t.global %s\n", v->name);
+        printf("%s:\n", v->name);
+        printf("\t.zero %d\n", v->ty->size);
+    }
+
+    return;
+}
+
+static void gen_text(Obj *prog) {
+    printf("\t.text\n");
 
     for (Obj *fn = prog; fn != NULL; fn = fn->next) {
         if (!fn->is_function) {
@@ -269,5 +288,12 @@ void codegen(Obj *prog) {
         printf("\tret\n");
     }
 
+    return;
+}
+
+void codegen(Obj *prog) {
+    assign_lvar_offsets(prog);
+    gen_data(prog);
+    gen_text(prog);
     return;
 }
