@@ -613,12 +613,27 @@ static Token *function(Token *tk, Type *basety) {
     return tk;
 }
 
+static bool is_function(Token *tk) {
+    if (equal(tk, ";")) {
+        return false;
+    }
+
+    Type dummy = {0};
+    Type *ty = declarator(&tk, tk, &dummy);
+    return ty->kind == TY_FUNC;
+}
+
 // parse = function*
 Obj *parse(Token *tk) {
     globals = NULL;
     while (tk->kind != TK_EOF) {
         Type *basety = declspec(&tk, tk);
-        tk = function(tk, basety);
+
+        if (is_function(tk)) {
+            tk = function(tk, basety);
+        } else {
+            error_tk(tk, "Expected a function");
+        }
     }
 
     return globals;
