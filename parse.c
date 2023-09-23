@@ -15,6 +15,12 @@ static Obj *find_var(Token *tk) {
         }
     }
 
+    for (Obj *v = globals; v != NULL; v = v->next) {
+        if (strlen(v->name) == tk->len && !strncmp(tk->loc, v->name, tk->len)) {
+            return v;
+        }
+    }
+
     return NULL;
 }
 
@@ -613,6 +619,22 @@ static Token *function(Token *tk, Type *basety) {
     return tk;
 }
 
+static Token *global_variable(Token *tk, Type *basety) {
+    bool first = true;
+
+    while (!consume(&tk, tk, ";")) {
+        if (!first) {
+            tk = skip(tk, ",");
+        }
+
+        Type *ty = declarator(&tk, tk, basety);
+        new_gvar(get_ident(ty->name), ty);
+        first = false;
+    }
+
+    return tk;
+}
+
 static bool is_function(Token *tk) {
     if (equal(tk, ";")) {
         return false;
@@ -623,7 +645,7 @@ static bool is_function(Token *tk) {
     return ty->kind == TY_FUNC;
 }
 
-// parse = function*
+// parse = (function | global-variable)*
 Obj *parse(Token *tk) {
     globals = NULL;
     while (tk->kind != TK_EOF) {
@@ -632,7 +654,7 @@ Obj *parse(Token *tk) {
         if (is_function(tk)) {
             tk = function(tk, basety);
         } else {
-            error_tk(tk, "Expected a function");
+            tk = global_variable(tk, basety);
         }
     }
 
