@@ -164,6 +164,11 @@ static int get_number(Token *tk) {
 
 // declspec = "int"
 static Type *declspec(Token **rest, Token *tk) {
+    if (equal(tk, "char")) {
+        *rest = skip(tk, "char");
+        return ty_int;
+    }
+
     *rest = skip(tk, "int");
     return ty_int;
 }
@@ -260,6 +265,10 @@ static Node *declaration(Token **rest, Token *tk) {
     return node;
 }
 
+static bool is_typename(Token *tk) {
+    return equal(tk, "int") || equal(tk, "char");
+}
+
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -328,7 +337,7 @@ static Node *compound_stmt(Token **rest, Token *tk) {
 
     while (!equal(tk, "}")) {
         Node *node;
-        if (equal(tk, "int")) {
+        if (is_typename(tk)) {
             node = declaration(&tk, tk);
         } else {
             node = stmt(&tk, tk);
