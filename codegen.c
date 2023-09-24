@@ -5,7 +5,8 @@
 #include "main.h"
 
 static int depth = 0;
-static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
+static char *argreg32[] = {"w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7"};
+static char *argreg64[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
 static Obj *current_fn = NULL;
 
 static int count(void) {
@@ -111,7 +112,7 @@ static void gen_expr(Node *node) {
         }
         assert(nargs <= 8);
         for (int i = nargs - 1; i >= 0; --i) {
-            pop(argreg[i]);
+            pop(argreg64[i]);
         }
         printf("\tbl %s\n", node->funcname);
         return;
@@ -276,7 +277,11 @@ static void gen_text(Obj *prog) {
 
         int i = 0;
         for (Obj *v = fn->params; v != NULL; v = v->next) {
-            printf("\tstr %s, [x29, #-%d]\n", argreg[i++], v->offset);
+            if (v->ty->size == 1) {
+                printf("\tstrb %s, [x29, #-%d]\n", argreg32[i++], v->offset);
+            } else {
+                printf("\tstr %s, [x29, #-%d]\n", argreg64[i++], v->offset);
+            }
         }
 
         gen_stmt(fn->body);
