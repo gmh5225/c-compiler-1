@@ -36,6 +36,42 @@ static void pop(char *reg) {
     return;
 }
 
+static void store(char *dst, char *src, Type *ty) {
+    if (ty->kind == TY_ARRAY) {
+        return;
+    }
+
+    switch (ty->size) {
+    case 1:
+        printf("\tstrb w%s, [%s]\n", &dst[1], src);
+        return;
+    case 8:
+        printf("\tstr x%s, [%s]\n", &dst[1], src);
+        return;
+    default:
+        assert(false);
+        return;
+    }
+}
+
+static void load(char *dst, char *src, Type *ty) {
+    if (ty->kind == TY_ARRAY) {
+        return;
+    }
+
+    switch (ty->size) {
+    case 1:
+        printf("\tldrb w%s, [%s]\n", &dst[1], src);
+        return;
+    case 8:
+        printf("\tldr x%s, [%s]\n", &dst[1], src);
+        return;
+    default:
+        assert(false);
+        return;
+    }
+}
+
 static int align_to(int n, int align) {
     return (n + align - 1) / align * align;
 }
@@ -81,15 +117,11 @@ static void gen_expr(Node *node) {
         return;
     case ND_VAR:
         gen_addr(node);
-        if (node->ty->kind != TY_ARRAY) {
-            printf("\tldr x0, [x0]\n");
-        }
+        load("x0", "x0", node->ty);
         return;
     case ND_DEREF:
         gen_expr(node->lhs);
-        if (node->ty->kind != TY_ARRAY) {
-            printf("\tldr x0, [x0]\n");
-        }
+        load("x0", "x0", node->ty);
         return;
     case ND_ADDR:
         gen_addr(node->lhs);
@@ -99,7 +131,7 @@ static void gen_expr(Node *node) {
         push("x0");
         gen_expr(node->rhs);
         pop("x1");
-        printf("\tstr x0, [x1]\n");
+        store("x0", "x1", node->ty);
         return;
     case ND_FUNC_CALL: {
         int nargs = 0;
