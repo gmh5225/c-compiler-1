@@ -3,6 +3,7 @@ CFLAGS := -std=c17
 CFLAGS += -pedantic-errors
 CFLAGS += -Wall
 CFLAGS += -Wextra
+CFLAGS += -Wno-missing-field-initializers
 CFLAGS += -O2
 
 .PHONY: all

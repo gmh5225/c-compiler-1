@@ -5,7 +5,8 @@
 #include "main.h"
 
 static int depth = 0;
-static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
+static char *argreg32[] = {"w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7"};
+static char *argreg64[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
 static Obj *current_fn = NULL;
 
 static int count(void) {
@@ -33,6 +34,42 @@ static void pop(char *reg) {
     }
 
     return;
+}
+
+static void store(char *dst, char *src, Type *ty) {
+    if (ty->kind == TY_ARRAY) {
+        return;
+    }
+
+    switch (ty->size) {
+    case 1:
+        printf("\tstrb w%s, [%s]\n", &dst[1], src);
+        return;
+    case 8:
+        printf("\tstr x%s, [%s]\n", &dst[1], src);
+        return;
+    default:
+        assert(false);
+        return;
+    }
+}
+
+static void load(char *dst, char *src, Type *ty) {
+    if (ty->kind == TY_ARRAY) {
+        return;
+    }
+
+    switch (ty->size) {
+    case 1:
+        printf("\tldrb w%s, [%s]\n", &dst[1], src);
+        return;
+    case 8:
+        printf("\tldr x%s, [%s]\n", &dst[1], src);
+        return;
+    default:
+        assert(false);
+        return;
+    }
 }
 
 static int align_to(int n, int align) {
@@ -80,15 +117,11 @@ static void gen_expr(Node *node) {
         return;
     case ND_VAR:
         gen_addr(node);
-        if (node->ty->kind != TY_ARRAY) {
-            printf("\tldr x0, [x0]\n");
-        }
+        load("x0", "x0", node->ty);
         return;
     case ND_DEREF:
         gen_expr(node->lhs);
-        if (node->ty->kind != TY_ARRAY) {
-            printf("\tldr x0, [x0]\n");
-        }
+        load("x0", "x0", node->ty);
         return;
     case ND_ADDR:
         gen_addr(node->lhs);
@@ -98,7 +131,7 @@ static void gen_expr(Node *node) {
         push("x0");
         gen_expr(node->rhs);
         pop("x1");
-        printf("\tstr x0, [x1]\n");
+        store("x0", "x1", node->ty);
         return;
     case ND_FUNC_CALL: {
         int nargs = 0;
@@ -111,7 +144,7 @@ static void gen_expr(Node *node) {
         }
         assert(nargs <= 8);
         for (int i = nargs - 1; i >= 0; --i) {
-            pop(argreg[i]);
+            pop(argreg64[i]);
         }
         printf("\tbl %s\n", node->funcname);
         return;
@@ -276,7 +309,11 @@ static void gen_text(Obj *prog) {
 
         int i = 0;
         for (Obj *v = fn->params; v != NULL; v = v->next) {
-            printf("\tstr %s, [x29, #-%d]\n", argreg[i++], v->offset);
+            if (v->ty->size == 1) {
+                printf("\tstrb %s, [x29, #-%d]\n", argreg32[i++], v->offset);
+            } else {
+                printf("\tstr %s, [x29, #-%d]\n", argreg64[i++], v->offset);
+            }
         }
 
         gen_stmt(fn->body);
