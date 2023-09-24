@@ -162,11 +162,11 @@ static int get_number(Token *tk) {
     return tk->val;
 }
 
-// declspec = "int"
+// declspec = "char" | "int"
 static Type *declspec(Token **rest, Token *tk) {
     if (equal(tk, "char")) {
         *rest = skip(tk, "char");
-        return ty_int;
+        return ty_char;
     }
 
     *rest = skip(tk, "int");
