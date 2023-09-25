@@ -285,7 +285,14 @@ static void gen_data(Obj *prog) {
         printf("\t.data\n");
         printf("\t.global %s\n", v->name);
         printf("%s:\n", v->name);
-        printf("\t.zero %d\n", v->ty->size);
+
+        if (v->init_data != NULL) {
+            for (int i = 0; i < v->ty->size; ++i) {
+                printf("\t.byte %d\n", v->init_data[i]);
+            }
+        } else {
+            printf("\t.zero %d\n", v->ty->size);
+        }
     }
 
     return;
