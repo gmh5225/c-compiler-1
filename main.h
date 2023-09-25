@@ -1,17 +1,21 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+typedef struct Token Token;
+typedef struct Node Node;
+typedef struct Obj Obj;
+typedef struct Type Type;
+
 //
 // Tokenizer
 //
-
-typedef struct Token Token;
 
 // Token kind
 typedef enum {
     TK_IDENT,
     TK_PUNCT,
     TK_KEYWORD,
+    TK_STR,
     TK_NUM,
     TK_EOF,
 } TokenKind;
@@ -23,6 +27,10 @@ struct Token {
 
     // Integer literal
     long long val;
+
+    // String literal
+    Type *ty;
+    char *str;
 
     // Identifier
     char *loc;
@@ -41,10 +49,6 @@ Token *tokenize(char *p);
 // Parser
 //
 
-typedef struct Node Node;
-typedef struct Obj Obj;
-typedef struct Type Type;
-
 // Variable or function
 struct Obj {
     char *name;
@@ -54,6 +58,9 @@ struct Obj {
     // Local variable
     bool is_local;
     int offset;
+
+    // Global variable
+    char *init_data;
 
     // Function
     bool is_function;

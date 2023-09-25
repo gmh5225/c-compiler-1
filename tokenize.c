@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -126,6 +127,20 @@ static bool is_keyword(Token *tk) {
     return false;
 }
 
+static Token *read_string_literal(char *start) {
+    char *p = start + 1;
+    for (; *p != '"'; ++p) {
+        if (*p == '\0' || *p == '\n') {
+            error_at(start, "Unclosed string literal");
+        }
+    }
+
+    Token *tk = new_token(TK_STR, start, p + 1);
+    tk->ty = array_of(ty_char, p - start);
+    tk->str = strndup(start + 1, p - start - 1);
+    return tk;
+}
+
 static void convert_keywords(Token *tk) {
     for (Token *t = tk; t->kind != TK_EOF; t = t->next) {
         if (is_keyword(t)) {
@@ -153,6 +168,13 @@ Token *tokenize(char *p) {
             char *q = p;
             cur->val = strtoll(p, &p, 10);
             cur->len = p - q;
+            continue;
+        }
+
+        if (*p == '"') {
+            cur->next = read_string_literal(p);
+            cur = cur->next;
+            p += cur->len;
             continue;
         }
 
