@@ -59,6 +59,9 @@ struct Obj {
     bool is_local;
     int offset;
 
+    // Global variable
+    char *init_data;
+
     // Function
     bool is_function;
     Obj *params;

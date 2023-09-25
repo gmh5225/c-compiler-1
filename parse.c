@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
@@ -75,6 +76,23 @@ static Obj *new_gvar(char *name, Type *ty) {
     Obj *var = new_var(name, ty);
     var->next = globals;
     globals = var;
+    return var;
+}
+
+static char *new_unique_name(void) {
+    static int cnt = 0;
+    char buf[16];
+    sprintf(buf, ".L..%d", cnt++);
+    return strdup(buf);
+}
+
+static Obj *new_anon_gvar(Type *ty) {
+    return new_gvar(new_unique_name(), ty);
+}
+
+static Obj *new_string_literal(char *p, Type *ty) {
+    Obj *var = new_anon_gvar(ty);
+    var->init_data = p;
     return var;
 }
 
@@ -587,6 +605,12 @@ static Node *primary(Token **rest, Token *tk) {
             error_tk(tk, "Undefined variable");
             return NULL;
         }
+        *rest = tk->next;
+        return new_var_node(var, tk);
+    }
+
+    if (tk->kind == TK_STR) {
+        Obj *var = new_string_literal(tk->str, tk->ty);
         *rest = tk->next;
         return new_var_node(var, tk);
     }
