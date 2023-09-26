@@ -5,6 +5,7 @@
 !/main.c
 !/main.h
 !/parse.c
+!/string.c
 !/test.sh
 !/tokenize.c
 !/type.c

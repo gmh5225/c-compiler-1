@@ -81,9 +81,7 @@ static Obj *new_gvar(char *name, Type *ty) {
 
 static char *new_unique_name(void) {
     static int cnt = 0;
-    char buf[16];
-    sprintf(buf, ".L..%d", cnt++);
-    return strdup(buf);
+    return format(".L..%d", cnt++);
 }
 
 static Obj *new_anon_gvar(Type *ty) {

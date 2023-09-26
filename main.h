@@ -9,6 +9,12 @@ typedef struct Obj Obj;
 typedef struct Type Type;
 
 //
+// String
+//
+
+char *format(char *fmt, ...);
+
+//
 // Tokenizer
 //
 
