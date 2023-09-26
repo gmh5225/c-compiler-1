@@ -127,17 +127,50 @@ static bool is_keyword(Token *tk) {
     return false;
 }
 
-static Token *read_string_literal(char *start) {
-    char *p = start + 1;
-    for (; *p != '"'; ++p) {
-        if (*p == '\0' || *p == '\n') {
+static int read_escaped_char(char *p) {
+    switch (*p) {
+    case 'a': return '\a';
+    case 'b': return '\b';
+    case 't': return '\t';
+    case 'n': return '\n';
+    case 'v': return '\v';
+    case 'f': return '\f';
+    case 'r': return '\r';
+    default:  return *p;
+    }
+}
+
+static char *string_literal_end(char *p) {
+    for (char *start = p; *p != '"'; ++p) {
+        if (*p == '\n' || *p == '\0') {
             error_at(start, "Unclosed string literal");
+        }
+
+        if (*p == '\\') {
+            ++p;
         }
     }
 
-    Token *tk = new_token(TK_STR, start, p + 1);
-    tk->ty = array_of(ty_char, p - start);
-    tk->str = strndup(start + 1, p - start - 1);
+    return p;
+}
+
+static Token *read_string_literal(char *start) {
+    char *end = string_literal_end(start + 1);
+    char *buf = calloc(1, end - start);
+    int len = 0;
+
+    for (char *p = start + 1; p < end; ) {
+        if (*p == '\\') {
+            buf[len++] = read_escaped_char(p + 1);
+            p += 2;
+        } else {
+            buf[len++] = *p++;
+        }
+    }
+
+    Token *tk = new_token(TK_STR, start, end + 1);
+    tk->ty = array_of(ty_char, len + 1);
+    tk->str = buf;
     return tk;
 }
 
