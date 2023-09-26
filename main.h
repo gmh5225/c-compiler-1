@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <stdbool.h>
+
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct Obj Obj;

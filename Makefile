@@ -15,23 +15,23 @@ test: main test.sh Makefile
 
 .PHONY: clean
 clean:
-	-rm -f main main.o tokenize.o parse.o type.o codegen.o
+	-rm -f main codegen.o main.o parse.o tokenize.o type.o
 	-rm -f tmp tmp.s sub.o
 
-main: main.o tokenize.o parse.o type.o codegen.o Makefile
+main: codegen.o main.o parse.o tokenize.o type.o Makefile
 	$(CC) -o $@ $(filter-out Makefile, $^)
 
-main.o: main.c main.h Makefile
+codegen.o: codegen.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-tokenize.o: tokenize.c main.h Makefile
+main.o: main.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 parse.o: parse.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-type.o: type.c main.h Makefile
+tokenize.o: tokenize.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-codegen.o: codegen.c main.h Makefile
+type.o: type.c main.h Makefile
 	$(CC) $(CFLAGS) -c -o $@ $<
