@@ -77,6 +77,7 @@ static int align_to(int n, int align) {
 }
 
 static void gen_expr(Node *node);
+static void gen_stmt(Node *node);
 
 static void gen_addr(Node *node) {
     if (node == NULL) {
@@ -132,6 +133,11 @@ static void gen_expr(Node *node) {
         gen_expr(node->rhs);
         pop("x1");
         store("x0", "x1", node->ty);
+        return;
+    case ND_STMT_EXPR:
+        for (Node *n = node->body; n != NULL; n = n->next) {
+            gen_stmt(n);
+        }
         return;
     case ND_FUNC_CALL: {
         int nargs = 0;
