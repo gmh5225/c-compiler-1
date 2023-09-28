@@ -7,6 +7,7 @@
 #include <string.h>
 #include "main.h"
 
+static char *current_filename;
 static char *current_input;
 
 int error(char *fmt, ...) {
@@ -37,7 +38,7 @@ static int verror_at(char *loc, char *fmt, va_list ap) {
         }
     }
 
-    int indent = fprintf(stderr, "%d: ", line_num);
+    int indent = fprintf(stderr, "%s:%d: ", current_filename, line_num);
     fprintf(stderr, "%.*s\n", (int)(end - line), line);
 
     int pos = loc - line + indent;
@@ -237,7 +238,8 @@ static void convert_keywords(Token *tk) {
     return;
 }
 
-Token *tokenize(char *p) {
+Token *tokenize(char *filename, char *p) {
+    current_filename = filename;
     current_input = p;
     Token head = {0};
     Token *cur = &head;
@@ -289,4 +291,8 @@ Token *tokenize(char *p) {
     cur->next = new_token(TK_EOF, p, p);
     convert_keywords(head.next);
     return head.next;
+}
+
+Token *tokenize_file(char *path, char *input) {
+    return tokenize(path, input);
 }
