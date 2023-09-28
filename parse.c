@@ -575,12 +575,20 @@ static Node *funccall(Token **rest, Token *tk) {
     return node;
 }
 
-// primary = "(" expr ")"
+// primary = "(" "{" stmt+ "}" ")"
+//         | "(" expr ")"
 //         | "sizeof" unary
 //         | funccall
 //         | ident
 //         | num
 static Node *primary(Token **rest, Token *tk) {
+    if (equal(tk, "(") && equal(tk->next, "{")) {
+        Node *node = new_node(ND_STMT_EXPR, tk);
+        node->body = compound_stmt(&tk, tk->next->next)->body;
+        *rest = skip(tk, ")");
+        return node;
+    }
+
     if (equal(tk, "(")) {
         Node *node = expr(&tk, tk->next);
         *rest = skip(tk, ")");
