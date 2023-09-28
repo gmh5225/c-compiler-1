@@ -295,9 +295,14 @@ Token *tokenize(char *filename, char *p) {
 }
 
 static char *read_file(char *path) {
-    FILE *fp = fopen(path, "r");
-    if (fp == NULL) {
-        error("Cannot open %s: %s", path, strerror(errno));
+    FILE *fp;
+    if (strcmp(path, "-") == 0) {
+        fp = stdin;
+    } else {
+        fp = fopen(path, "r");
+        if (fp == NULL) {
+            error("Cannot open %s: %s", path, strerror(errno));
+        }
     }
 
     char *buf;
@@ -313,7 +318,9 @@ static char *read_file(char *path) {
         fwrite(buf2, 1, n, out);
     }
 
-    fclose(fp);
+    if (fp != stdin) {
+        fclose(fp);
+    }
 
     fflush(out);
     if (buflen == 0 || buf[buflen - 1] != '\n') {
