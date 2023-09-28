@@ -105,6 +105,19 @@ void add_type(Node *node) {
             node->ty = pointer_to(node->lhs->ty);
         }
         return;
+    case ND_STMT_EXPR:
+        if (node->body) {
+            Node *stmt = node->body;
+            while (stmt->next != NULL) {
+                stmt = stmt->next;
+            }
+            if (stmt->kind == ND_EXPR_STMT) {
+                node->ty = stmt->lhs->ty;
+                return;
+            }
+        }
+        error_tk(node->tk, "Statement expression returning void is not supported");
+        return;
     default:
         return;
     }
