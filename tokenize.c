@@ -128,8 +128,20 @@ static bool is_keyword(Token *tk) {
 }
 
 static int read_escaped_char(char **new_pos, char *p) {
-    *new_pos = p + 1;
+    if ('0' <= *p && *p <= '7') {
+        int c = *p++ - '0';
+        if ('0' <= *p && *p <= '7') {
+            c = (c << 3) + (*p++ - '0');
+            if ('0' <= *p && *p <= '7') {
+                c = (c << 3) + (*p++ - '0');
+            }
+        }
 
+        *new_pos = p;
+        return c;
+    }
+
+    *new_pos = p + 1;
     switch (*p) {
     case 'a': return '\a';
     case 'b': return '\b';
