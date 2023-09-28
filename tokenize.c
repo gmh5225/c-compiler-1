@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -293,6 +294,36 @@ Token *tokenize(char *filename, char *p) {
     return head.next;
 }
 
-Token *tokenize_file(char *path, char *input) {
-    return tokenize(path, input);
+static char *read_file(char *path) {
+    FILE *fp = fopen(path, "r");
+    if (fp == NULL) {
+        error("Cannot open %s: %s", path, strerror(errno));
+    }
+
+    char *buf;
+    size_t buflen;
+    FILE *out = open_memstream(&buf, &buflen);
+
+    while (true) {
+        char buf2[4096];
+        int n = fread(buf2, 1, sizeof(buf2), fp);
+        if (n == 0) {
+            break;
+        }
+        fwrite(buf2, 1, n, out);
+    }
+
+    fclose(fp);
+
+    fflush(out);
+    if (buflen == 0 || buf[buflen - 1] != '\n') {
+        fputc('\n', out);
+    }
+    fputc('\0', out);
+    fclose(out);
+    return buf;
+}
+
+Token *tokenize_file(char *path) {
+    return tokenize(path, read_file(path));
 }
