@@ -20,8 +20,27 @@ int error(char *fmt, ...) {
 }
 
 static int verror_at(char *loc, char *fmt, va_list ap) {
-    int pos = loc - current_input;
-    fprintf(stderr, "%s\n", current_input);
+    char *line = loc;
+    while (current_input < line && line[-1] != '\n') {
+        line -= 1;
+    }
+
+    char *end = loc;
+    while (*end != '\n') {
+        end += 1;
+    }
+
+    int line_num = 1;
+    for (char *p = current_input; p < line; ++p) {
+        if (*p == '\n') {
+            line_num += 1;
+        }
+    }
+
+    int indent = fprintf(stderr, "%d: ", line_num);
+    fprintf(stderr, "%.*s\n", (int)(end - line), line);
+
+    int pos = loc - line + indent;
     fprintf(stderr, "%*s", pos, "");
     fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
