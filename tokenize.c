@@ -141,6 +141,27 @@ static int read_escaped_char(char **new_pos, char *p) {
         return c;
     }
 
+    if (*p == 'x') {
+        p += 1;
+        if (!isxdigit(*p)) {
+            error_at(p, "Invalid hex escape sequence");
+        }
+
+        int c = 0;
+        for (; isxdigit(*p); ++p) {
+            if ('0' <= *p && *p <= '9') {
+                c = (c << 4) + (*p - '0');
+            } else if ('A' <= *p && *p <= 'F') {
+                c = (c << 4) + (*p - 'A' + 10);
+            } else if ('a' <= *p && *p <= 'f') {
+                c = (c << 4) + (*p - 'a' + 10);
+            }
+        }
+
+        *new_pos = p;
+        return c;
+    }
+
     *new_pos = p + 1;
     switch (*p) {
     case 'a': return '\a';
