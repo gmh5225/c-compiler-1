@@ -16,7 +16,7 @@ function assert() {
     expected="$1"
     input="$2"
 
-    ./main "$input" > tmp.s || exit 1
+    echo "$input" | ./main - > tmp.s || exit 1
     gcc -o tmp tmp.s sub.o || exit 1
     ./tmp; actual="$?"
 

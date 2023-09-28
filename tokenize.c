@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include <string.h>
 #include "main.h"
 
+static char *current_filename;
 static char *current_input;
 
 int error(char *fmt, ...) {
@@ -20,8 +22,27 @@ int error(char *fmt, ...) {
 }
 
 static int verror_at(char *loc, char *fmt, va_list ap) {
-    int pos = loc - current_input;
-    fprintf(stderr, "%s\n", current_input);
+    char *line = loc;
+    while (current_input < line && line[-1] != '\n') {
+        line -= 1;
+    }
+
+    char *end = loc;
+    while (*end != '\n') {
+        end += 1;
+    }
+
+    int line_num = 1;
+    for (char *p = current_input; p < line; ++p) {
+        if (*p == '\n') {
+            line_num += 1;
+        }
+    }
+
+    int indent = fprintf(stderr, "%s:%d: ", current_filename, line_num);
+    fprintf(stderr, "%.*s\n", (int)(end - line), line);
+
+    int pos = loc - line + indent;
     fprintf(stderr, "%*s", pos, "");
     fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
@@ -218,7 +239,8 @@ static void convert_keywords(Token *tk) {
     return;
 }
 
-Token *tokenize(char *p) {
+Token *tokenize(char *filename, char *p) {
+    current_filename = filename;
     current_input = p;
     Token head = {0};
     Token *cur = &head;
@@ -270,4 +292,45 @@ Token *tokenize(char *p) {
     cur->next = new_token(TK_EOF, p, p);
     convert_keywords(head.next);
     return head.next;
+}
+
+static char *read_file(char *path) {
+    FILE *fp;
+    if (strcmp(path, "-") == 0) {
+        fp = stdin;
+    } else {
+        fp = fopen(path, "r");
+        if (fp == NULL) {
+            error("Cannot open %s: %s", path, strerror(errno));
+        }
+    }
+
+    char *buf;
+    size_t buflen;
+    FILE *out = open_memstream(&buf, &buflen);
+
+    while (true) {
+        char buf2[4096];
+        int n = fread(buf2, 1, sizeof(buf2), fp);
+        if (n == 0) {
+            break;
+        }
+        fwrite(buf2, 1, n, out);
+    }
+
+    if (fp != stdin) {
+        fclose(fp);
+    }
+
+    fflush(out);
+    if (buflen == 0 || buf[buflen - 1] != '\n') {
+        fputc('\n', out);
+    }
+    fputc('\0', out);
+    fclose(out);
+    return buf;
+}
+
+Token *tokenize_file(char *path) {
+    return tokenize(path, read_file(path));
 }

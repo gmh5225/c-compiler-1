@@ -51,7 +51,7 @@ int error_tk(Token *tk, char *fmt, ...);
 bool equal(Token *tk, char *op);
 Token *skip(Token *tk, char *op);
 bool consume(Token **rest, Token *tk, char *str);
-Token *tokenize(char *p);
+Token *tokenize_file(char *path);
 
 //
 // Parser

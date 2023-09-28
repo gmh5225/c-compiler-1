@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    Token *tk = tokenize(argv[1]);
+    Token *tk = tokenize_file(argv[1]);
     Obj *prog = parse(tk);
     codegen(prog);
     return EXIT_SUCCESS;
