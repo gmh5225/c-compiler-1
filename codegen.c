@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -9,6 +10,15 @@ static char *argreg32[] = {"w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7"};
 static char *argreg64[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
 static Obj *current_fn = NULL;
 
+static void println(char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    printf("\n");
+    va_end(ap);
+    return;
+}
+
 static int count(void) {
     static int i = 0;
     return i++;
@@ -16,10 +26,10 @@ static int count(void) {
 
 static void push(char *reg) {
     if ((depth++ & 1) == 0) {
-        printf("\tsub sp, sp, #16\n");
-        printf("\tstr %s, [sp, #8]\n", reg);
+        println("\tsub sp, sp, #16");
+        println("\tstr %s, [sp, #8]", reg);
     } else {
-        printf("\tstr %s, [sp]\n", reg);
+        println("\tstr %s, [sp]", reg);
     }
 
     return;
@@ -27,10 +37,10 @@ static void push(char *reg) {
 
 static void pop(char *reg) {
     if ((--depth & 1) == 0) {
-        printf("\tldr %s, [sp, #8]\n", reg);
-        printf("\tadd sp, sp, #16\n");
+        println("\tldr %s, [sp, #8]", reg);
+        println("\tadd sp, sp, #16");
     } else {
-        printf("\tldr %s, [sp]\n", reg);
+        println("\tldr %s, [sp]", reg);
     }
 
     return;
@@ -43,10 +53,10 @@ static void store(char *dst, char *src, Type *ty) {
 
     switch (ty->size) {
     case 1:
-        printf("\tstrb w%s, [%s]\n", &dst[1], src);
+        println("\tstrb w%s, [%s]", &dst[1], src);
         return;
     case 8:
-        printf("\tstr x%s, [%s]\n", &dst[1], src);
+        println("\tstr x%s, [%s]", &dst[1], src);
         return;
     default:
         assert(false);
@@ -61,10 +71,10 @@ static void load(char *dst, char *src, Type *ty) {
 
     switch (ty->size) {
     case 1:
-        printf("\tldrb w%s, [%s]\n", &dst[1], src);
+        println("\tldrb w%s, [%s]", &dst[1], src);
         return;
     case 8:
-        printf("\tldr x%s, [%s]\n", &dst[1], src);
+        println("\tldr x%s, [%s]", &dst[1], src);
         return;
     default:
         assert(false);
@@ -88,9 +98,9 @@ static void gen_addr(Node *node) {
     switch (node->kind) {
     case ND_VAR:
         if (node->var->is_local) {
-            printf("\tsub x0, x29, #%d\n", node->var->offset);
+            println("\tsub x0, x29, #%d", node->var->offset);
         } else {
-            printf("\tadr x0, %s\n", node->var->name);
+            println("\tadr x0, %s", node->var->name);
         }
         return;
     case ND_DEREF:
@@ -111,10 +121,10 @@ static void gen_expr(Node *node) {
     switch (node->kind) {
     case ND_NEG:
         gen_expr(node->lhs);
-        printf("\tneg x0, x0\n");
+        println("\tneg x0, x0");
         return;
     case ND_NUM:
-        printf("\tmov x0, #%lld\n", node->val);
+        println("\tmov x0, #%lld", node->val);
         return;
     case ND_VAR:
         gen_addr(node);
@@ -152,7 +162,7 @@ static void gen_expr(Node *node) {
         for (int i = nargs - 1; i >= 0; --i) {
             pop(argreg64[i]);
         }
-        printf("\tbl %s\n", node->funcname);
+        println("\tbl %s", node->funcname);
         return;
     }
     default:
@@ -166,40 +176,40 @@ static void gen_expr(Node *node) {
 
     switch (node->kind) {
     case ND_ADD:
-        printf("\tadd x0, x1, x0\n");
+        println("\tadd x0, x1, x0");
         return;
     case ND_SUB:
-        printf("\tsub x0, x1, x0\n");
+        println("\tsub x0, x1, x0");
         return;
     case ND_MUL:
-        printf("\tmul x0, x1, x0\n");
+        println("\tmul x0, x1, x0");
         return;
     case ND_DIV:
-        printf("\tsdiv x0, x1, x0\n");
+        println("\tsdiv x0, x1, x0");
         return;
     case ND_EQ:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, eq\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, eq");
         return;
     case ND_NE:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, ne\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, ne");
         return;
     case ND_LT:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, lt\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, lt");
         return;
     case ND_LE:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, le\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, le");
         return;
     case ND_GT:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, gt\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, gt");
         return;
     case ND_GE:
-        printf("\tcmp x1, x0\n");
-        printf("\tcset x0, ge\n");
+        println("\tcmp x1, x0");
+        println("\tcset x0, ge");
         return;
     default:
         error_tk(node->tk, "Invalid expression");
@@ -217,15 +227,15 @@ static void gen_stmt(Node *node) {
     case ND_IF: {
         int c = count();
         gen_expr(node->cond);
-        printf("\tcmp x0, #0\n");
-        printf("\tbeq .L.else.%d\n", c);
+        println("\tcmp x0, #0");
+        println("\tbeq .L.else.%d", c);
         gen_stmt(node->then);
-        printf("\tb .L.end.%d\n", c);
-        printf(".L.else.%d:\n", c);
+        println("\tb .L.end.%d", c);
+        println(".L.else.%d:", c);
         if (node->els != NULL) {
             gen_stmt(node->els);
         }
-        printf(".L.end.%d:\n", c);
+        println(".L.end.%d:", c);
         return;
     }
     case ND_FOR: {
@@ -233,18 +243,18 @@ static void gen_stmt(Node *node) {
         if (node->init != NULL) {
             gen_stmt(node->init);
         }
-        printf(".L.begin.%d:\n", c);
+        println(".L.begin.%d:", c);
         if (node->cond != NULL) {
             gen_expr(node->cond);
-            printf("\tcmp x0, #0\n");
-            printf("\tbeq .L.end.%d\n", c);
+            println("\tcmp x0, #0");
+            println("\tbeq .L.end.%d", c);
         }
         gen_stmt(node->then);
         if (node->inc != NULL) {
             gen_expr(node->inc);
         }
-        printf("\tb .L.begin.%d\n", c);
-        printf(".L.end.%d:\n", c);
+        println("\tb .L.begin.%d", c);
+        println(".L.end.%d:", c);
         return;
     }
     case ND_BLOCK:
@@ -254,7 +264,7 @@ static void gen_stmt(Node *node) {
         return;
     case ND_RETURN:
         gen_expr(node->lhs);
-        printf("\tb .L.return.%s\n", current_fn->name);
+        println("\tb .L.return.%s", current_fn->name);
         return;
     case ND_EXPR_STMT:
         gen_expr(node->lhs);
@@ -288,16 +298,16 @@ static void gen_data(Obj *prog) {
             continue;
         }
 
-        printf("\t.data\n");
-        printf("\t.global %s\n", v->name);
-        printf("%s:\n", v->name);
+        println("\t.data");
+        println("\t.global %s", v->name);
+        println("%s:", v->name);
 
         if (v->init_data != NULL) {
             for (int i = 0; i < v->ty->size; ++i) {
-                printf("\t.byte %d\n", v->init_data[i]);
+                println("\t.byte %d", v->init_data[i]);
             }
         } else {
-            printf("\t.zero %d\n", v->ty->size);
+            println("\t.zero %d", v->ty->size);
         }
     }
 
@@ -305,7 +315,7 @@ static void gen_data(Obj *prog) {
 }
 
 static void gen_text(Obj *prog) {
-    printf("\t.text\n");
+    println("\t.text");
 
     for (Obj *fn = prog; fn != NULL; fn = fn->next) {
         if (!fn->is_function) {
@@ -313,29 +323,29 @@ static void gen_text(Obj *prog) {
         }
 
         current_fn = fn;
-        printf("\t.global %s\n", fn->name);
-        printf("%s:\n", fn->name);
+        println("\t.global %s", fn->name);
+        println("%s:", fn->name);
 
-        printf("\tstp x29, x30, [sp, #-16]!\n");
-        printf("\tmov x29, sp\n");
-        printf("\tsub sp, sp, #%d\n", fn->stack_size);
+        println("\tstp x29, x30, [sp, #-16]!");
+        println("\tmov x29, sp");
+        println("\tsub sp, sp, #%d", fn->stack_size);
 
         int i = 0;
         for (Obj *v = fn->params; v != NULL; v = v->next) {
             if (v->ty->size == 1) {
-                printf("\tstrb %s, [x29, #-%d]\n", argreg32[i++], v->offset);
+                println("\tstrb %s, [x29, #-%d]", argreg32[i++], v->offset);
             } else {
-                printf("\tstr %s, [x29, #-%d]\n", argreg64[i++], v->offset);
+                println("\tstr %s, [x29, #-%d]", argreg64[i++], v->offset);
             }
         }
 
         gen_stmt(fn->body);
         assert(depth == 0);
 
-        printf(".L.return.%s:\n", fn->name);
-        printf("\tmov sp, x29\n");
-        printf("\tldp x29, x30, [sp], #16\n");
-        printf("\tret\n");
+        println(".L.return.%s:", fn->name);
+        println("\tmov sp, x29");
+        println("\tldp x29, x30, [sp], #16");
+        println("\tret");
     }
 
     return;
