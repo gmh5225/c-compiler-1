@@ -3,13 +3,15 @@
 #include "main.h"
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
+    if (argc != 3) {
         error("Invalid number of arguments");
         return EXIT_FAILURE;
     }
 
-    Token *tk = tokenize_file(argv[1]);
+    Token *tk = tokenize_file(argv[2]);
     Obj *prog = parse(tk);
-    codegen(prog);
+
+    FILE *out = fopen(argv[1], "w");
+    codegen(prog, out);
     return EXIT_SUCCESS;
 }
