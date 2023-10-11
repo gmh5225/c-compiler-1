@@ -7,11 +7,20 @@
 static char *opt_o;
 static char *input_file;
 
+static void usage(int status) {
+    fprintf(stderr, "Usage: ./main [-o <path>] <file>\n");
+    exit(status);
+}
+
 static void parse_args(int argc, char **argv) {
     for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--help") == 0) {
+            usage(EXIT_SUCCESS);
+        }
+
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[++i] == NULL) {
-                error("Missing output file name");
+                usage(EXIT_FAILURE);
                 return;
             }
 
