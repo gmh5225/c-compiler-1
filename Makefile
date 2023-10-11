@@ -11,7 +11,8 @@ all: main
 
 .PHONY: test
 test: main test.sh Makefile
-	-bash test.sh
+	./test.sh
+	./test-driver.sh
 
 .PHONY: clean
 clean:
