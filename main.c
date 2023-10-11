@@ -21,7 +21,6 @@ static void parse_args(int argc, char **argv) {
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[++i] == NULL) {
                 usage(EXIT_FAILURE);
-                return;
             }
 
             opt_o = argv[i];
@@ -35,7 +34,6 @@ static void parse_args(int argc, char **argv) {
 
         if (argv[i][0] == '-' && argv[i][1] != '\0') {
             error("Unknown argument: %s", argv[i]);
-            return;
         }
 
         input_file = argv[i];
@@ -43,7 +41,6 @@ static void parse_args(int argc, char **argv) {
 
     if (input_file == NULL) {
         error("No input files");
-        return;
     }
 }
 
@@ -55,7 +52,6 @@ static FILE *open_file(char *path) {
     FILE *out = fopen(path, "w");
     if (out == NULL) {
         error("Cannot open output file: %s: %s", path, strerror(errno));
-        exit(EXIT_FAILURE);
     }
 
     return out;

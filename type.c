@@ -76,7 +76,6 @@ void add_type(Node *node) {
     case ND_ASSIGN:
         if (node->lhs->ty->kind == TY_ARRAY) {
             error_tk(node->tk, "Not an lvalue");
-            return;
         }
         node->ty = node->lhs->ty;
         return;
@@ -94,7 +93,6 @@ void add_type(Node *node) {
     case ND_DEREF:
         if (node->lhs->ty->base == NULL) {
             error_tk(node->tk, "Invalid pointer dereference");
-            return;
         }
         node->ty = node->lhs->ty->base;
         return;
@@ -117,7 +115,6 @@ void add_type(Node *node) {
             }
         }
         error_tk(node->tk, "Statement expression returning void is not supported");
-        return;
     default:
         return;
     }

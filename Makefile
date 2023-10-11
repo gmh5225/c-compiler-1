@@ -4,6 +4,7 @@ CFLAGS += -pedantic-errors
 CFLAGS += -Wall
 CFLAGS += -Wextra
 CFLAGS += -Wno-missing-field-initializers
+CFLAGS += -Wno-return-type
 CFLAGS += -O2
 
 .PHONY: all

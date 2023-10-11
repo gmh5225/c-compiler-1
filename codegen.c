@@ -93,7 +93,6 @@ static void gen_stmt(Node *node);
 static void gen_addr(Node *node) {
     if (node == NULL) {
         error("Invalid lvalue");
-        return;
     }
 
     switch (node->kind) {
@@ -109,14 +108,12 @@ static void gen_addr(Node *node) {
         return;
     default:
         error_tk(node->tk, "Not an lvalue");
-        return;
     }
 }
 
 static void gen_expr(Node *node) {
     if (node == NULL) {
         error_tk(node->tk, "Invalid expression");
-        return;
     }
 
     switch (node->kind) {
@@ -214,14 +211,12 @@ static void gen_expr(Node *node) {
         return;
     default:
         error_tk(node->tk, "Invalid expression");
-        return;
     }
 }
 
 static void gen_stmt(Node *node) {
     if (node == NULL) {
         error_tk(node->tk, "Invalid statement");
-        return;
     }
 
     switch (node->kind) {
@@ -272,7 +267,6 @@ static void gen_stmt(Node *node) {
         return;
     default:
         error_tk(node->tk, "Invalid statement");
-        return;
     }
 }
 

@@ -18,7 +18,6 @@ int error(char *fmt, ...) {
     fprintf(stderr, "\n");
     va_end(ap);
     exit(EXIT_FAILURE);
-    return EXIT_FAILURE;
 }
 
 static int verror_at(char *loc, char *fmt, va_list ap) {
@@ -56,7 +55,6 @@ int error_at(char *loc, char *fmt, ...) {
     verror_at(loc, fmt, ap);
     va_end(ap);
     exit(EXIT_FAILURE);
-    return EXIT_FAILURE;
 }
 
 int error_tk(Token *tk, char *fmt, ...) {
@@ -65,7 +63,6 @@ int error_tk(Token *tk, char *fmt, ...) {
     verror_at(tk->loc, fmt, ap);
     va_end(ap);
     exit(EXIT_FAILURE);
-    return EXIT_FAILURE;
 }
 
 bool equal(Token *tk, char *op) {
@@ -77,7 +74,6 @@ bool equal(Token *tk, char *op) {
 Token *skip(Token *tk, char *op) {
     if (!equal(tk, op)) {
         error_tk(tk, "Expected '%s'", op);
-        return NULL;
     }
 
     return tk->next;
@@ -303,7 +299,6 @@ Token *tokenize(char *filename, char *p) {
         }
 
         error_at(p, "Invalid token");
-        return NULL;
     }
 
     cur->next = new_token(TK_EOF, p, p);

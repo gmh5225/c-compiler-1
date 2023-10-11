@@ -116,7 +116,6 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tk) {
     }
 
     error_tk(tk, "Invalid operands");
-    return NULL;
 }
 
 static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
@@ -142,7 +141,6 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tk) {
     }
 
     error_tk(tk, "Invalid operands");
-    return NULL;
 }
 
 static Node *stmt(Token **rest, Token *tk);
@@ -163,7 +161,6 @@ static Type *type_suffix(Token **rest, Token *tk, Type *ty);
 static char *get_ident(Token *tk) {
     if (tk->kind != TK_IDENT) {
         error_tk(tk, "Expected an identifier");
-        return NULL;
     }
 
     return strndup(tk->loc, tk->len);
@@ -172,7 +169,6 @@ static char *get_ident(Token *tk) {
 static int get_number(Token *tk) {
     if (tk->kind != TK_NUM) {
         error_tk(tk, "Expected a number");
-        return 0;
     }
 
     return tk->val;
@@ -197,7 +193,6 @@ static Type *declarator(Token **rest, Token *tk, Type *ty) {
 
     if (tk->kind != TK_IDENT) {
         error_tk(tk, "Expected a variable name");
-        return NULL;
     }
 
     ty = type_suffix(rest, tk->next, ty);
@@ -609,7 +604,6 @@ static Node *primary(Token **rest, Token *tk) {
         Obj *var = find_var(tk);
         if (var == NULL) {
             error_tk(tk, "Undefined variable");
-            return NULL;
         }
         *rest = tk->next;
         return new_var_node(var, tk);
@@ -628,7 +622,6 @@ static Node *primary(Token **rest, Token *tk) {
     }
 
     error_tk(tk, "Expected a number");
-    return NULL;
 }
 
 static void create_param_lvars(Type *params) {
