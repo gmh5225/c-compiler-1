@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct Token Token;
 typedef struct Node Node;
@@ -188,6 +189,6 @@ void add_type(Node *node);
 // Code generator
 //
 
-void codegen(Obj *prog);
+void codegen(Obj *prog, FILE *out);
 
 #endif

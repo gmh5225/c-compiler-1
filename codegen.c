@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "main.h"
 
+static FILE *output_file = NULL;
 static int depth = 0;
 static char *argreg32[] = {"w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7"};
 static char *argreg64[] = {"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"};
@@ -13,8 +14,8 @@ static Obj *current_fn = NULL;
 static void println(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
-    printf("\n");
+    vfprintf(output_file, fmt, ap);
+    fprintf(output_file, "\n");
     va_end(ap);
     return;
 }
@@ -351,7 +352,9 @@ static void gen_text(Obj *prog) {
     return;
 }
 
-void codegen(Obj *prog) {
+void codegen(Obj *prog, FILE *out) {
+    output_file = out;
+
     assign_lvar_offsets(prog);
     gen_data(prog);
     gen_text(prog);
