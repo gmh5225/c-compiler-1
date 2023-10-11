@@ -251,6 +251,23 @@ Token *tokenize(char *filename, char *p) {
             continue;
         }
 
+        if (starts_with(p, "//")) {
+            p += 2;
+            while (*p != '\n') {
+                p += 1;
+            }
+            continue;
+        }
+
+        if (starts_with(p, "/*")) {
+            char *q = strstr(p + 2, "*/");
+            if (!q) {
+                error_at(p, "Unclosed block comment");
+            }
+            p = q + 2;
+            continue;
+        }
+
         if (isdigit(*p)) {
             cur->next = new_token(TK_NUM, p, p);
             cur = cur->next;
