@@ -1,17 +1,64 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "main.h"
 
-int main(int argc, char **argv) {
-    if (argc != 3) {
-        error("Invalid number of arguments");
-        return EXIT_FAILURE;
+static char *opt_o;
+static char *input_file;
+
+static void parse_args(int argc, char **argv) {
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "-o") == 0) {
+            if (argv[++i] == NULL) {
+                error("Missing output file name");
+                return;
+            }
+
+            opt_o = argv[i];
+            continue;
+        }
+
+        if (strncmp(argv[i], "-o", 2) == 0) {
+            opt_o = argv[i] + 2;
+            continue;
+        }
+
+        if (argv[i][0] == '-' && argv[i][1] != '\0') {
+            error("Unknown argument: %s", argv[i]);
+            return;
+        }
+
+        input_file = argv[i];
     }
 
-    Token *tk = tokenize_file(argv[2]);
+    if (input_file == NULL) {
+        error("No input files");
+        return;
+    }
+}
+
+static FILE *open_file(char *path) {
+    if (path == NULL || strcmp(path, "-") == 0) {
+        return stdout;
+    }
+
+    FILE *out = fopen(path, "w");
+    if (out == NULL) {
+        error("Cannot open output file: %s: %s", path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    return out;
+}
+
+int main(int argc, char **argv) {
+    parse_args(argc, argv);
+
+    Token *tk = tokenize_file(input_file);
     Obj *prog = parse(tk);
 
-    FILE *out = fopen(argv[1], "w");
+    FILE *out = open_file(opt_o);
     codegen(prog, out);
     return EXIT_SUCCESS;
 }
