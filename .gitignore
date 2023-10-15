@@ -6,6 +6,7 @@
 !/main.h
 !/parse.c
 !/string.c
+!/test-driver.sh
 !/test.sh
 !/tokenize.c
 !/type.c
